@@ -40,6 +40,11 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
+        // Skip authentication for API requests (controller handles it)
+        if ($this->is('api/*')) {
+            return;
+        }
+
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {

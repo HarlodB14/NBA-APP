@@ -142,6 +142,7 @@
       <path value="$PROJECT_DIR$/NBA-APP-backend/vendor/nikic/php-parser" />
       <path value="$PROJECT_DIR$/NBA-APP-backend/vendor/brianium/paratest" />
       <path value="$PROJECT_DIR$/NBA-APP-backend/vendor/myclabs/deep-copy" />
+      <path value="$PROJECT_DIR$/NBA-APP-backend/vendor/laravel/sanctum" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.5">

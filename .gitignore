@@ -1,0 +1,45 @@
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Laravel Backend
+NBA-APP-backend/vendor/
+NBA-APP-backend/.env
+NBA-APP-backend/.env.local
+NBA-APP-backend/.env.*.local
+NBA-APP-backend/storage/
+NBA-APP-backend/bootstrap/cache/
+NBA-APP-backend/node_modules/
+NBA-APP-backend/public/hot
+NBA-APP-backend/public/storage
+NBA-APP-backend/.phpunit.result.cache
+NBA-APP-backend/database/database.sqlite
+
+# Nuxt Frontend
+NBA-APP-frontend/node_modules/
+NBA-APP-frontend/.nuxt/
+NBA-APP-frontend/.output/
+NBA-APP-frontend/dist/
+NBA-APP-frontend/.env
+NBA-APP-frontend/.env.local
+NBA-APP-frontend/.env.*.local
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
