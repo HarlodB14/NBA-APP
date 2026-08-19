@@ -1,0 +1,2905 @@
+<title>Security — oefenapp</title>
+
+<style>
+:root{
+  --bg:#F4F3EF; --surface:#FFFFFF; --sunk:#EDEBE4;
+  --ink:#191C20; --muted:#6B685F; --line:#DEDBD2;
+  --accent:#A8742A; --accent-soft:#F0E4D0;
+  --pub:#2A6F97; --priv:#8E3B76;
+  --ok:#2E7D5B; --ok-soft:#DFF0E6;
+  --bad:#B23A48; --bad-soft:#F8E1E3;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:Georgia,"Iowan Old Style",Palatino,serif;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#101319; --surface:#171B22; --sunk:#1D222B;
+    --ink:#E9E7E1; --muted:#9A968C; --line:#2A303A;
+    --accent:#D8A250; --accent-soft:#33291A;
+    --pub:#5FA8D3; --priv:#C77BB0;
+    --ok:#5FBF92; --ok-soft:#16281F;
+    --bad:#E8737F; --bad-soft:#2C1A1D;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101319; --surface:#171B22; --sunk:#1D222B;
+  --ink:#E9E7E1; --muted:#9A968C; --line:#2A303A;
+  --accent:#D8A250; --accent-soft:#33291A;
+  --pub:#5FA8D3; --priv:#C77BB0;
+  --ok:#5FBF92; --ok-soft:#16281F;
+  --bad:#E8737F; --bad-soft:#2C1A1D;
+}
+:root[data-theme="light"]{
+  --bg:#F4F3EF; --surface:#FFFFFF; --sunk:#EDEBE4;
+  --ink:#191C20; --muted:#6B685F; --line:#DEDBD2;
+  --accent:#A8742A; --accent-soft:#F0E4D0;
+  --pub:#2A6F97; --priv:#8E3B76;
+  --ok:#2E7D5B; --ok-soft:#DFF0E6;
+  --bad:#B23A48; --bad-soft:#F8E1E3;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:640px;margin:0 auto;padding:10px 16px 8px;display:flex;align-items:center;gap:12px}
+.brand{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap}
+.brand b{color:var(--accent);font-weight:600}
+.spacer{flex:1}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:8px;width:34px;height:34px;
+  display:grid;place-items:center;font-size:14px;color:var(--muted)}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.rail{height:3px;background:var(--sunk)}
+.rail i{display:block;height:100%;background:var(--accent);width:0;
+  transition:width .35s cubic-bezier(.4,0,.2,1)}
+
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 96px}
+
+.nav{display:flex;gap:4px;overflow-x:auto;padding:4px;background:var(--sunk);
+  border-radius:var(--r);margin-bottom:22px;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav button{flex:0 0 auto;background:none;border:0;padding:8px 13px;border-radius:7px;
+  font-size:13.5px;color:var(--muted);white-space:nowrap}
+.nav button[aria-current="true"]{background:var(--surface);color:var(--ink);font-weight:600;
+  box-shadow:0 1px 2px rgba(0,0,0,.07)}
+
+h1{font-size:25px;line-height:1.2;margin:0 0 6px;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:15px;margin:30px 0 12px;letter-spacing:.09em;text-transform:uppercase;
+  font-family:var(--mono);font-weight:600;color:var(--muted)}
+.lede{color:var(--muted);margin:0 0 22px;max-width:60ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{background:var(--accent);color:#FFF8EE;border:0;border-radius:9px;padding:13px 20px;
+  font-weight:600;font-size:15px}
+:root[data-theme="dark"] .btn:not(.ghost){color:#141414}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn:not(.ghost){color:#141414}}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink);font-weight:500}
+.btn.ghost:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 7px;white-space:nowrap}
+.tag.goal{color:var(--accent);border-color:var(--accent)}
+.num{font-variant-numeric:tabular-nums}
+.pub{color:var(--pub);font-weight:600}
+.priv{color:var(--priv);font-weight:600}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.stat .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-size:27px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.15;margin-top:3px}
+.stat .v small{font-size:14px;color:var(--muted);font-weight:400}
+
+.meter{height:7px;background:var(--sunk);border-radius:4px;overflow:hidden;display:flex}
+.meter i{display:block;height:100%}
+.meter .m0{background:var(--line)}
+.meter .m1{background:var(--accent)}
+.meter .m2{background:var(--ok)}
+
+.qhead{display:flex;gap:6px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.qtext{font-size:19px;line-height:1.4;font-weight:550;margin:0 0 18px;text-wrap:pretty}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--surface);
+  border:1.5px solid var(--line);border-radius:var(--r);padding:14px 15px;min-height:52px;
+  font-size:15.5px;line-height:1.4;transition:border-color .12s,background .12s}
+.opt:hover{border-color:var(--muted)}
+.opt .ltr{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);
+  border:1px solid var(--line);border-radius:5px;width:22px;height:22px;display:grid;
+  place-items:center;flex:0 0 auto;margin-top:1px}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.opt[aria-pressed="true"] .ltr{border-color:var(--accent);color:var(--accent)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.right .ltr{border-color:var(--ok);color:var(--ok)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .ltr{border-color:var(--bad);color:var(--bad)}
+.opt:disabled{cursor:default;opacity:1}
+.opt.dim{opacity:.5}
+
+.conf{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
+.conf p{margin:0 0 10px;font-size:13.5px;color:var(--muted)}
+.conf .row button{flex:1;min-width:130px}
+
+.verdict{display:flex;align-items:center;gap:9px;font-weight:650;font-size:15px;margin:20px 0 10px}
+.verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+.why{font-family:var(--serif);font-size:16.5px;line-height:1.62;background:var(--sunk);
+  border-left:3px solid var(--accent);border-radius:0 var(--r) var(--r) 0;padding:15px 17px;margin:0}
+.why b{font-weight:700}
+.why code{font-family:var(--mono);font-size:.86em;background:var(--surface);padding:1px 5px;border-radius:4px}
+
+.note{font-size:13.5px;color:var(--muted);margin-top:12px}
+.note.warn{color:var(--bad)}
+
+.flash{min-height:190px;display:flex;flex-direction:column;justify-content:center;gap:14px;
+  text-align:center;padding:26px 20px}
+.flash .term{font-size:23px;font-weight:650;letter-spacing:-.01em}
+.flash .def{font-family:var(--serif);font-size:16.5px;line-height:1.6;color:var(--ink);text-align:left}
+
+.cov{width:100%;border-collapse:collapse;font-size:14px}
+.cov th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);font-weight:600;padding:0 8px 8px 0;
+  border-bottom:1px solid var(--line)}
+.cov td{padding:9px 8px 9px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+.cov td:first-child{font-family:var(--mono);color:var(--muted);width:34px}
+.cov td:last-child{width:34%}
+.cov tr:last-child td{border-bottom:0}
+
+.empty{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty .big{font-size:34px;margin-bottom:10px}
+.list{margin:0;padding-left:20px}
+.list li{margin-bottom:7px}
+.list li:last-child{margin-bottom:0}
+
+.scroller{overflow-x:auto}
+svg .lbl{font-family:var(--mono);font-size:10px;fill:var(--muted);letter-spacing:.06em}
+svg .nm{font-family:var(--sans);font-size:12px;fill:var(--ink);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <span class="brand"><b>SEC</b> &middot; <span id="countdown"></span></span>
+    <span class="spacer"></span>
+    <button class="iconbtn" id="themeBtn" title="Thema wisselen" aria-label="Thema wisselen">◐</button>
+  </div>
+  <div class="rail"><i id="rail"></i></div>
+</header>
+
+<main class="wrap">
+  <nav class="nav" id="nav"></nav>
+  <div id="view"></div>
+</main>
+
+<script>
+"use strict";
+
+/* ============ 1. KALENDER ============ */
+const EXAM = "2026-08-24";
+const REST = ["2026-08-13","2026-08-20"];
+
+function isoAdd(iso,n){const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);}
+function todayISO(){return new Date().toISOString().slice(0,10);}
+
+const STUDY_DAYS=(function(){const out=[];let d="2026-08-09";
+  while(d<EXAM){if(!REST.includes(d))out.push(d);d=isoAdd(d,1);}return out;})();
+
+function dayIndex(){const t=todayISO();
+  if(t<=STUDY_DAYS[0])return 0;
+  for(let i=0;i<STUDY_DAYS.length;i++)if(STUDY_DAYS[i]>=t)return i;
+  return STUDY_DAYS.length-1;}
+function daysLeftCalendar(){return Math.max(0,Math.round(
+  (new Date(EXAM+"T12:00:00")-new Date(todayISO()+"T12:00:00"))/86400000));}
+function studyDaysLeft(){return Math.max(1,STUDY_DAYS.length-dayIndex());}
+function isTaperDay(){return todayISO()>="2026-08-23";}
+
+/* ============ 2. KAARTENBANK ============
+   Elke kaart heeft twee assen: t = onderwerp, g = doel.
+   De doel-as is de diagnostische as -- fouten ontstaan doordat
+   echte begrippen in het verkeerde vakje belanden. */
+const G={V:"Vertrouwelijkheid",I:"Integriteit",A:"Authenticatie",
+  O:"Onweerlegbaarheid",S:"Sleutelbeheer",B:"Grondbegrip"};
+
+const CARDS = [];
+/* ---- H1 Inleiding ---- */
+CARDS.push(
+{id:"1a",ch:1,t:"Beveiligingsdoelen",g:G.B,
+ q:"Welke vier doelen wil je met cryptografie bereiken?",
+ o:["Vertrouwelijkheid, integriteit, authenticatie, onweerlegbaarheid",
+    "Vertrouwelijkheid, beschikbaarheid, integriteit, snelheid",
+    "Encryptie, hashing, ondertekenen, certificeren",
+    "Geheimhouding, sterkte, sleutellengte, entropie"],a:0,
+ w:"De vier doelen zijn <b>vertrouwelijkheid</b> (niemand anders kan het lezen), <b>integriteit</b> (het is onderweg niet veranderd), <b>authenticatie</b> (de afzender is wie hij zegt) en <b>onweerlegbaarheid</b> (hij kan achteraf niet ontkennen dat hij het stuurde). Beschikbaarheid hoort wel bij informatiebeveiliging, maar los je niet op met crypto — daar helpt een back-up, geen sleutel."},
+
+{id:"1b",ch:1,t:"Beveiligingsdoelen",g:G.O,
+ q:"Wat houdt onweerlegbaarheid precies in?",
+ o:["De afzender kan achteraf niet ontkennen dat hij het bericht verstuurd heeft",
+    "Het bericht kan onderweg niet gewijzigd worden",
+    "Alleen de bedoelde ontvanger kan het bericht lezen",
+    "Het bericht komt gegarandeerd aan"],a:0,
+ w:"<b>Onweerlegbaarheid</b> gaat over bewijs tegenover een derde. Bij een MAC delen zender en ontvanger dezelfde sleutel, dus kunnen ze allebei hetzelfde bericht maken — daar valt niets te bewijzen. Alleen een <b>digitale handtekening</b> geeft onweerlegbaarheid, want alleen de ondertekenaar heeft zijn <span class=\"priv\">private sleutel</span>.",
+ cf:["5m","5n"]},
+
+{id:"1c",ch:1,t:"Basisbegrippen",g:G.B,
+ q:"Wat is het verschil tussen coderen en encrypten?",
+ o:["Coderen is een omzetting zonder geheim; encrypten gebruikt een sleutel om iets geheim te maken",
+    "Coderen is sterker dan encrypten",
+    "Coderen gebruikt een publieke sleutel, encrypten een private",
+    "Er is geen verschil, het zijn synoniemen"],a:0,
+ w:"<b>Coderen</b> zet data in een andere vorm — ASCII, Base64, morse. Iedereen kan het terugdraaien, er is geen geheim. <b>Encrypten</b> maakt van platte tekst cryptotekst met een <b>sleutel</b>, en zonder die sleutel kom je er niet bij. Base64 is dus géén beveiliging."},
+
+{id:"1d",ch:1,t:"Basisbegrippen",g:G.B,
+ q:"Wat is cryptotekst?",
+ o:["De versleutelde vorm van een bericht","De leesbare vorm van een bericht",
+    "De sleutel waarmee versleuteld wordt","De hash van een bericht"],a:0,
+ w:"<b>Platte tekst</b> is het leesbare bericht, <b>cryptotekst</b> het versleutelde resultaat. Encrypten gaat van plat naar crypto, decrypten weer terug."}
+);
+
+/* ---- H2 Principes ---- */
+CARDS.push(
+{id:"2a",ch:2,t:"Kerckhoff",g:G.B,
+ q:"Wat zegt het principe van Kerckhoff?",
+ o:["Een systeem moet veilig blijven ook als alles behalve de sleutel bekend is",
+    "Een algoritme moet geheim blijven om veilig te zijn",
+    "De sleutel moet minstens even lang zijn als het bericht",
+    "Je moet altijd twee algoritmen over elkaar heen gebruiken"],a:0,
+ w:"<b>Kerckhoff</b>: de veiligheid mag alleen in de <b>sleutel</b> zitten, niet in geheimhouding van het algoritme. Daarom worden goede algoritmen juist openbaar gepubliceerd — dan kan de hele wereld ze proberen te kraken. Het omgekeerde heet <b>security by obscurity</b> en is schijnzekerheid.",
+ cf:["2b"]},
+
+{id:"2b",ch:2,t:"Kerckhoff",g:G.B,
+ q:"Waarom is de gekraakte OV-chipkaart (2008) hét voorbeeld van security by obscurity?",
+ o:["Het geheime, zelfbedachte algoritme bleek zwak zodra het uitlekte",
+    "De sleutels waren te kort gekozen",
+    "Er werd een verouderde versie van AES gebruikt",
+    "De kaarten hadden geen certificaat"],a:0,
+ w:"De Mifare Classic gebruikte een geheimgehouden, zelf ontworpen algoritme. Zodra onderzoekers het reverse-engineerden, was het snel gekraakt. Een algoritme dat alleen veilig is zolang niemand het kent, is niet veilig — het is onbeproefd. Vandaar de vuistregel <b>never roll your own crypto</b>.",
+ cf:["2a"]},
+
+{id:"2c",ch:2,t:"Perfecte geheimhouding",g:G.V,
+ q:"Wanneer is er sprake van perfecte geheimhouding volgens Shannon?",
+ o:["Als de cryptotekst geen enkele informatie over de platte tekst prijsgeeft",
+    "Als het algoritme geheim is","Als de sleutel langer is dan 256 bits",
+    "Als het bericht ook nog gehasht wordt"],a:0,
+ w:"<b>Perfecte geheimhouding</b> betekent dat je uit de cryptotekst niets over de platte tekst kunt afleiden — zelfs met oneindige rekenkracht niet. Dat kan alleen met een sleutel die net zo lang is als het bericht en die je maar één keer gebruikt. Praktisch onbruikbaar: je sleuteldistributieprobleem wordt dan net zo groot als het bericht zelf."},
+
+{id:"2d",ch:2,t:"Eisen aan crypto",g:G.B,
+ q:"Aan welke twee eisen moet een bruikbaar cryptografisch algoritme voldoen?",
+ o:["Met de sleutel efficiënt te berekenen, zonder sleutel praktisch onmogelijk te kraken",
+    "Snel te kraken en langzaam te berekenen","Geheim én gepatenteerd",
+    "Omkeerbaar zonder sleutel maar traag"],a:0,
+ w:"Het moet <b>efficiënt te berekenen</b> zijn voor wie de sleutel heeft — anders is het onbruikbaar — en <b>praktisch onmogelijk te kraken</b> voor wie hem niet heeft. \"Praktisch onmogelijk\" is geen wiskundige onmogelijkheid: het betekent dat het zó lang duurt dat de informatie tegen die tijd waardeloos is."},
+
+{id:"2e",ch:2,t:"Sleutelsterkte",g:G.S,
+ q:"3DES heeft een sleutellengte van 168 bits maar een sleutelsterkte van 112 bits. Wat betekent dat?",
+ o:["Een bekende aanval maakt dat je effectief maar 112 bits hoeft te doorzoeken",
+    "Er gaan 56 bits verloren bij het opslaan van de sleutel",
+    "De sleutel wordt afgekapt tot 112 bits","112 bits is de lengte van de cryptotekst"],a:0,
+ w:"<b>Sleutellengte</b> is hoeveel bits de sleutel telt; <b>sleutelsterkte</b> is hoeveel werk een aanvaller er écht aan heeft. Bij 3DES verlaagt de meet-in-the-middle-aanval de effectieve sterkte van 168 naar 112. Bij een goed algoritme vallen lengte en sterkte samen; verschillen ze, dan is er een zwakte gevonden. Bij asymmetrische algoritmen ligt de sterkte structureel veel lager dan de lengte.",
+ cf:["2f","4d"]},
+
+{id:"2f",ch:2,t:"Sleutelsterkte",g:G.S,
+ q:"Een sleutel wordt gegenereerd uit 32 bits echte willekeur. Wat is de sleutelsterkte?",
+ o:["31 bits","32 bits","16 bits","64 bits"],a:0,
+ w:"Er zijn 2³² mogelijke sleutels, maar gemiddeld vind je de goede al na de hélft van je pogingen — 2³¹. De sterkte is dus <b>31 bits</b>. Let op waar de willekeur vandaan komt: is de sleutel 128 bits lang maar afgeleid van 32 bits entropie, dan is hij 31 bits sterk, niet 128.",
+ cf:["2e","2g"]},
+
+{id:"2g",ch:2,t:"Entropie",g:G.S,
+ q:"Wat is entropie in de context van sleutels en wachtwoorden?",
+ o:["De hoeveelheid echte onvoorspelbaarheid, uitgedrukt in bits",
+    "De lengte van de sleutel in tekens","Het aantal keren dat een sleutel hergebruikt wordt",
+    "De rekentijd die encryptie kost"],a:0,
+ w:"<b>Entropie</b> meet onvoorspelbaarheid. Een wachtwoord van twintig tekens uit een bekend citaat heeft bijna geen entropie; vier willekeurige woorden uit een lijst van 2048 hebben 4 × 11 = 44 bits. Niet de lengte telt, maar hoeveel mogelijkheden een aanvaller moet aflopen.",
+ cf:["2f","10c"]},
+
+{id:"2h",ch:2,t:"Willekeur",g:G.S,
+ q:"Waarom mag je sleutels niet genereren met een gewone random-functie?",
+ o:["Die is voorspelbaar, waardoor een aanvaller de sleutel kan reproduceren",
+    "Die is te traag voor grote sleutels","Die levert alleen even getallen op",
+    "Die werkt niet op alle besturingssystemen"],a:0,
+ w:"Een gewone pseudo-randomgenerator is deterministisch: ken je de seed, dan ken je de hele reeks. Voor sleutels heb je een <b>CSPRNG</b> nodig, die entropie haalt uit onvoorspelbare bronnen zoals timing en ruis. Op Linux is dat <code>/dev/random</code> en <code>/dev/urandom</code>, op Windows de Cryptography API."},
+
+{id:"2i",ch:2,t:"Willekeur",g:G.S,
+ q:"Wat doet /dev/random als er te weinig entropie in de pool zit?",
+ o:["Het blokkeert tot er genoeg entropie verzameld is","Het geeft voorspelbare bits terug",
+    "Het geeft een foutmelding","Het valt terug op een gewone randomfunctie"],a:0,
+ w:"<code>/dev/random</code> blokkeert liever dan dat het zwakke willekeur uitgeeft. <code>/dev/urandom</code> blokkeert niet en levert altijd door — voor vrijwel alle toepassingen prima, zolang de pool ooit goed geïnitialiseerd is. Het punt: veilige willekeur is een schaars goed dat het systeem echt moet verzamelen."}
+);
+
+/* ---- H3 Symmetrische encryptie ---- */
+CARDS.push(
+{id:"3a",ch:3,t:"Symmetrisch",g:G.V,
+ q:"Wat kenmerkt symmetrische encryptie?",
+ o:["Dezelfde sleutel wordt gebruikt om te encrypten en te decrypten",
+    "Er is een publieke en een private sleutel","Er is helemaal geen sleutel nodig",
+    "De sleutel is altijd 128 bits lang"],a:0,
+ w:"Bij <b>symmetrische encryptie</b> is de sleutel voor versleutelen en ontsleutelen dezelfde. Dat maakt het snel en sterk, maar levert meteen het grote probleem op: hoe krijgt de ander die sleutel zonder dat iemand meekijkt?",
+ cf:["4a"]},
+
+{id:"3b",ch:3,t:"Sleuteluitwisseling",g:G.S,
+ q:"Waarom mag je een symmetrische sleutel niet over hetzelfde kanaal sturen als het bericht?",
+ o:["Wie het bericht onderschept, onderschept de sleutel ook en kan alles lezen",
+    "Omdat de sleutel dan te lang wordt","Omdat het kanaal daar technisch ongeschikt voor is",
+    "Omdat de sleutel dan verloopt"],a:0,
+ w:"Dit is het <b>sleuteldistributieprobleem</b>. Stuur je de sleutel over hetzelfde kanaal, dan heb je niets beveiligd — de afluisteraar krijgt sleutel én cryptotekst. De sleutel moet <b>out-of-band</b>: via een ander kanaal, persoonlijk, of via asymmetrische crypto. Precies daarom bestaat het hybride model van TLS.",
+ cf:["3c","8a"]},
+
+{id:"3c",ch:3,t:"Sleuteluitwisseling",g:G.S,
+ q:"Wat betekent out-of-band bij sleuteluitwisseling?",
+ o:["Via een ander kanaal dan waar het versleutelde bericht overheen gaat",
+    "Buiten de frequentieband van het netwerk","Met een sleutel die buiten het algoritme valt",
+    "Zonder encryptie"],a:0,
+ w:"<b>Out-of-band</b> wil zeggen: langs een andere weg. Bericht per e-mail, sleutel per telefoon of persoonlijk overhandigd. Het idee is dat een aanvaller beide kanalen tegelijk zou moeten beheersen. Hetzelfde principe zie je terug bij tweefactorauthenticatie via sms.",
+ cf:["3b","10j"]},
+
+{id:"3d",ch:3,t:"Symmetrisch",g:G.O,
+ q:"Een aanvaller bemachtigt de symmetrische sleutel van een lopende communicatie. Wat kan hij daarmee NIET?",
+ o:["Bewijzen tegenover een derde wie het oorspronkelijke bericht schreef",
+    "Onderschepte berichten ontsleutelen","Zelf berichten versleutelen die echt lijken",
+    "Eerder opgeslagen cryptotekst alsnog lezen"],a:0,
+ w:"Met de sleutel kan hij meelezen, zich voordoen als een van beide partijen, oude opgeslagen berichten alsnog ontsleutelen en berichten wijzigen. Wat hij niet kan, kan niemand: bij symmetrische crypto bestaat geen <b>onweerlegbaarheid</b>, want beide partijen hebben dezelfde sleutel en kunnen dus allebei hetzelfde bericht maken.",
+ cf:["1b","5n"]},
+
+{id:"3e",ch:3,t:"ROT-13",g:G.B,
+ q:"Waarom is ROT-13 geen serieuze encryptie?",
+ o:["Er is geen sleutel: wie het algoritme kent, kan het altijd terugdraaien",
+    "De sleutel is te kort","Het werkt alleen op cijfers","Het is te traag"],a:0,
+ w:"ROT-13 verschuift elke letter dertien plaatsen. Er valt niets te kiezen, dus er is geen <b>sleutel</b> — en volgens Kerckhoff zit daar juist de hele veiligheid in. Het is een <b>codering</b>, geen encryptie: bedoeld om iets niet per ongeluk te lezen, niet om het geheim te houden.",
+ cf:["1c"]}
+);
+
+/* ---- H4 Asymmetrische encryptie ---- */
+CARDS.push(
+{id:"4a",ch:4,t:"Asymmetrisch",g:G.B,
+ q:"Wat kenmerkt asymmetrische encryptie?",
+ o:["Een sleutelpaar: wat met de ene sleutel versleuteld is, kan alleen met de andere open",
+    "Eén sleutel die zender en ontvanger delen","Helemaal geen sleutel, alleen een algoritme",
+    "Twee identieke sleutels op twee plaatsen"],a:0,
+ w:"Je hebt een <span class=\"pub\">publieke sleutel</span> die je rondstrooit en een <span class=\"priv\">private sleutel</span> die je nooit afgeeft. Ze horen bij elkaar: wat met de ene dichtgaat, gaat alleen met de andere open. Dat lost het sleuteldistributieprobleem op — je hoeft niets geheims meer uit te wisselen.",
+ cf:["3a"]},
+
+{id:"4b",ch:4,t:"Sleutelrichting",g:G.V,
+ q:"Je wilt een bericht sturen dat alleen Bob kan lezen. Met welke sleutel versleutel je?",
+ o:["Bobs publieke sleutel","Bobs private sleutel","Jouw private sleutel","Jouw publieke sleutel"],a:0,
+ w:"Voor <b>vertrouwelijkheid</b> versleutel je met de <span class=\"pub\">publieke sleutel van de ontvanger</span>. Alleen Bob heeft de bijbehorende <span class=\"priv\">private sleutel</span>, dus alleen hij krijgt het open. Vuistregel: <i>geheimhouden → sleutel van de ánder; ondertekenen → je eigen sleutel</i>.",
+ cf:["4c","4e"]},
+
+{id:"4c",ch:4,t:"Sleutelrichting",g:G.O,
+ q:"Je wilt dat iedereen kan controleren dat een bericht écht van jou komt. Met welke sleutel versleutel je?",
+ o:["Jouw private sleutel","Jouw publieke sleutel","De publieke sleutel van de ontvanger",
+    "De private sleutel van de ontvanger"],a:0,
+ w:"Voor <b>ondertekenen</b> gebruik je je eigen <span class=\"priv\">private sleutel</span>. Iedereen kan het met jouw <span class=\"pub\">publieke sleutel</span> controleren, en omdat alleen jij die private sleutel hebt, is dat meteen het bewijs. Let op: dit is géén geheimhouding — de hele wereld kan het lezen. Precies andersom dan bij vertrouwelijkheid.",
+ cf:["4b","5m"]},
+
+{id:"4d",ch:4,t:"Asymmetrisch",g:G.B,
+ q:"Wat is een nadeel van asymmetrische encryptie ten opzichte van symmetrische?",
+ o:["Het is ongeveer duizend keer trager","Het biedt geen authenticatie",
+    "De sleutel moet out-of-band worden uitgewisseld","Het werkt alleen op korte sleutels"],a:0,
+ w:"Asymmetrisch is ruwweg <b>duizend keer trager</b>, levert per bit sleutellengte veel minder <b>sleutelsterkte</b> op (vandaar RSA-2048 tegenover AES-128) en maakt de cryptotekst langer. Daarom versleutel je er nooit je hele dataverkeer mee, maar alleen de sessiesleutel — het <b>hybride model</b>.",
+ cf:["2e","4f"]},
+
+{id:"4e",ch:4,t:"Trapdoor",g:G.B,
+ q:"Waarop berust de veiligheid van RSA?",
+ o:["Twee grote priemgetallen vermenigvuldigen is makkelijk, het product weer ontbinden niet",
+    "Het algoritme wordt geheimgehouden","De sleutel wordt elke sessie vervangen",
+    "De cryptotekst is langer dan de platte tekst"],a:0,
+ w:"Een <b>trapdoorfunctie</b> is één kant op makkelijk en de andere kant op praktisch onmogelijk — tenzij je de geheime ingang kent. Bij RSA is dat <b>priemfactorontbinding</b>: twee grote priemgetallen vermenigvuldigen kost niets, het product terugontbinden kost eeuwen. Je private sleutel is die geheime ingang."},
+
+{id:"4f",ch:4,t:"Hybride model",g:G.S,
+ q:"Wat is het hybride model?",
+ o:["Asymmetrisch een symmetrische sessiesleutel uitwisselen, en daarna symmetrisch versleutelen",
+    "Twee symmetrische algoritmen achter elkaar","Een hash combineren met een certificaat",
+    "Afwisselend publieke en private sleutels gebruiken"],a:0,
+ w:"Je gebruikt het beste van twee werelden: asymmetrisch is traag maar lost sleuteluitwisseling op, symmetrisch is snel maar niet uit te wisselen. Dus wissel je asymmetrisch een <b>sessiesleutel</b> uit en versleutel je daarna alle data symmetrisch. Dit is exact wat TLS doet.",
+ cf:["4d","8a"]},
+
+{id:"4g",ch:4,t:"Asymmetrisch",g:G.A,
+ q:"Wat is het risico als je iemands publieke sleutel zomaar van internet plukt?",
+ o:["Je weet niet of hij echt van die persoon is — een aanvaller kan de zijne aanbieden",
+    "Publieke sleutels verlopen na een dag","De sleutel wordt daarmee onbruikbaar",
+    "Je kunt er dan niet meer mee ondertekenen"],a:0,
+ w:"Een publieke sleutel mag iedereen zien, maar je moet wél weten dat hij bij de juiste persoon hoort. Anders zet een man-in-the-middle zijn eigen sleutel neer en leest alles mee. Dat probleem — de koppeling tussen sleutel en identiteit — lossen <b>certificaten</b> en de <b>chain of trust</b> op.",
+ cf:["7a","7c"]}
+);
+
+/* ---- H5 Hashing, MAC en ondertekenen ---- */
+CARDS.push(
+{id:"5a",ch:5,t:"Checksum",g:G.I,
+ q:"Waarvoor dient een gewone checksum, zoals een XOR over alle bytes?",
+ o:["Toevallige fouten in de overdracht opsporen","Een bericht geheim maken",
+    "De afzender authenticeren","Onweerlegbaarheid vastleggen"],a:0,
+ w:"Een <b>checksum</b> vangt <b>toevallige</b> fouten — ruis op de lijn, een omgevallen bit. Tegen een aanvaller helpt hij niet: die past het bericht aan én berekent de nieuwe checksum. Voor opzet heb je een cryptografisch veilige hash nodig, en voor bescherming tegen wijziging bovendien een sleutel (MAC).",
+ cf:["5e","5j"]},
+
+{id:"5b",ch:5,t:"Hashfunctie",g:G.I,
+ q:"Wat is een hashfunctie?",
+ o:["Een functie die willekeurig lange invoer omzet in een vaste, korte uitvoer",
+    "Een functie die tekst versleutelt met een sleutel",
+    "Een functie die cryptotekst weer leesbaar maakt",
+    "Een functie die een sleutelpaar genereert"],a:0,
+ w:"Een <b>hashfunctie</b> perst invoer van elke lengte in een uitvoer van vaste lengte — bij MD5 altijd 128 bits, bij SHA-256 altijd 256. Hij is <b>eenrichtingsverkeer</b>: uit de hash krijg je de invoer niet terug. En er is geen sleutel bij betrokken, dus een hash op zichzelf beschermt nergens tegen een aanvaller.",
+ cf:["5j","5m"]},
+
+{id:"5c",ch:5,t:"Collisie",g:G.I,
+ q:"Wat is een collisie bij een hashfunctie?",
+ o:["Twee verschillende invoeren leveren dezelfde hash op",
+    "Twee hashes worden tegelijk berekend","De hash is langer dan de invoer",
+    "De hashfunctie geeft een foutmelding"],a:0,
+ w:"Een <b>collisie</b> is twee verschillende invoeren met dezelfde hash. Bij een cryptografisch veilige hash mag het praktisch onmogelijk zijn er zelf een te construeren. MD5 en SHA-1 zijn juist afgeschreven omdát dat wél kan — dan kun je een handtekening onder een ander document schuiven.",
+ cf:["5d","6f"]},
+
+{id:"5d",ch:5,t:"Collisie",g:G.I,
+ q:"Waarom bestaan er sowieso collisies bij elke hashfunctie?",
+ o:["Er zijn oneindig veel invoeren en maar een eindig aantal mogelijke hashes",
+    "Omdat hashfuncties niet zorgvuldig ontworpen zijn",
+    "Alleen bij MD5, niet bij SHA-256","Omdat de hash altijd korter is dan de sleutel"],a:0,
+ w:"Het <b>duiventilprincipe</b>: stop je oneindig veel berichten in 2¹²⁸ vakjes, dan zitten er onvermijdelijk meerdere in hetzelfde vakje. Collisies <i>bestaan</i> dus altijd. Het verschil tussen een goede en een gebroken hash is niet of ze bestaan, maar of je er eentje kunt vínden.",
+ cf:["5c"]},
+
+{id:"5e",ch:5,t:"Veilige hash",g:G.I,
+ q:"Wanneer noem je een hashfunctie cryptografisch veilig?",
+ o:["Als je er praktisch geen invoer bij kunt vinden en geen collisies kunt construeren",
+    "Als de hash langer is dan 64 bits","Als er een geheime sleutel in verwerkt zit",
+    "Als hij heel snel te berekenen is"],a:0,
+ w:"Drie eisen: je kunt uit de hash de invoer niet terugrekenen, je kunt bij een gegeven hash geen passende invoer vinden, en je kunt geen twee invoeren met dezelfde hash construeren. Snelheid is juist géén pluspunt — bij wachtwoorden wil je expres een trage functie.",
+ cf:["5c","5i"]},
+
+{id:"5f",ch:5,t:"Rainbow table",g:G.V,
+ q:"Wat is een rainbow table?",
+ o:["Een vooraf berekende tabel van hashes waarmee je snel het bijbehorende wachtwoord opzoekt",
+    "Een tabel met alle mogelijke sleutels van een algoritme",
+    "Een overzicht van welk algoritme wanneer verouderd raakt",
+    "Een lijst met ingetrokken certificaten"],a:0,
+ w:"Een aanvaller berekent van tevoren de hashes van miljarden wachtwoorden. Buit hij een database met hashes, dan is het nog slechts opzoeken. Het tegengif is een <b>salt</b>: die maakt de tabel per gebruiker waardeloos, want hij zou hem voor elke salt opnieuw moeten bouwen.",
+ cf:["5g"]},
+
+{id:"5g",ch:5,t:"Salt",g:G.V,
+ q:"Wat doet een salt bij het opslaan van wachtwoorden?",
+ o:["Het voegt per gebruiker unieke willekeur toe, zodat gelijke wachtwoorden verschillende hashes krijgen",
+    "Het versleutelt de hash met een geheime sleutel",
+    "Het maakt de hash korter","Het zorgt dat het wachtwoord terug te rekenen is"],a:0,
+ w:"Een <b>salt</b> is een willekeurige waarde die per gebruiker bij het wachtwoord wordt gezet vóór het hashen. Twee mensen met hetzelfde wachtwoord krijgen zo verschillende hashes, en vooraf berekende rainbow tables worden nutteloos. De salt hoeft niet geheim te zijn — hij wordt gewoon in leesbare vorm naast de hash opgeslagen.",
+ cf:["5f","5h"]},
+
+{id:"5h",ch:5,t:"Salt",g:G.V,
+ q:"Waarom is het geen probleem dat de salt onversleuteld in de database staat?",
+ o:["De salt hoeft alleen uniek te zijn; hij moet het vooraf berekenen onmogelijk maken, niet geheim zijn",
+    "Omdat de salt toch niet te lezen is","Omdat de salt na gebruik gewist wordt",
+    "Dat is wel een probleem, het hoort versleuteld te zijn"],a:0,
+ w:"Het werk van de salt zit in <b>uniciteit</b>, niet in geheimhouding. De aanvaller moet zijn tabel per gebruiker opnieuw opbouwen, en dat is precies de bedoeling. Een geheime waarde die je toevoegt heet trouwens een <i>pepper</i> — een ander middel voor een ander doel.",
+ cf:["5g"]},
+
+{id:"5i",ch:5,t:"Wachtwoordopslag",g:G.V,
+ q:"Waarom sla je wachtwoorden gehasht op in plaats van versleuteld?",
+ o:["Bij een hash is er geen sleutel die gestolen kan worden om alles terug te draaien",
+    "Hashen is sneller dan versleutelen","Een hash is korter en bespaart opslag",
+    "Versleutelde wachtwoorden zijn niet te vergelijken"],a:0,
+ w:"Versleutelen is <b>omkeerbaar</b>: wie de sleutel buitmaakt, heeft alle wachtwoorden in leesbare vorm. Hashen is eenrichtingsverkeer — er ís geen sleutel. Je bewaart de hash en vergelijkt bij het inloggen de hash van wat er ingetypt wordt. Zelfs de beheerder kan het wachtwoord dan niet zien.",
+ cf:["5e","5g"]},
+
+{id:"5j",ch:5,t:"MAC",g:G.A,
+ q:"Wat voegt een MAC toe ten opzichte van een gewone hash?",
+ o:["Een gedeelde geheime sleutel, waardoor de ontvanger ook weet van wie het komt",
+    "Een langere uitvoer","Onweerlegbaarheid tegenover een rechter",
+    "Versleuteling van de inhoud"],a:0,
+ w:"Een <b>MAC</b> is een hash mét een gedeelde geheime sleutel. Een gewone hash kan iedereen opnieuw uitrekenen, dus een aanvaller past bericht én hash aan. Bij een MAC kan dat niet zonder de sleutel: je krijgt <b>integriteit én authenticatie</b>. Maar geen onweerlegbaarheid, want beide partijen hebben dezelfde sleutel.",
+ cf:["5b","5m","5n"]},
+
+{id:"5k",ch:5,t:"HMAC",g:G.A,
+ q:"Wat is HMAC?",
+ o:["Een gestandaardiseerde constructie om veilig een MAC uit een hashfunctie te bouwen",
+    "Een asymmetrisch handtekeningalgoritme","Een hashfunctie zonder sleutel",
+    "Een methode om sleutels uit te wisselen"],a:0,
+ w:"Sleutel en bericht zomaar achter elkaar plakken en hashen levert aanvalbare constructies op. <b>HMAC</b> (RFC 2104) doet het goed: het hasht twee keer, met de sleutel op twee gedefinieerde manieren verwerkt. Je ziet het als <code>HMAC-SHA256</code> — HMAC is de constructie, SHA-256 de hash eronder.",
+ cf:["5j"]},
+
+{id:"5m",ch:5,t:"Digitale handtekening",g:G.O,
+ q:"Hoe zet je een digitale handtekening?",
+ o:["Je hasht het document en versleutelt die hash met je private sleutel",
+    "Je versleutelt het document met de publieke sleutel van de ontvanger",
+    "Je hasht het document samen met een gedeelde geheime sleutel",
+    "Je versleutelt het document met je publieke sleutel"],a:0,
+ w:"Eerst <b>hashen</b>, dan die hash versleutelen met je <span class=\"priv\">private sleutel</span>. Hashen omdat asymmetrisch traag is en de hash klein — je hoeft niet het hele document door RSA te halen. De ontvanger ontsleutelt de handtekening met jouw <span class=\"pub\">publieke sleutel</span>, hasht het document zelf en vergelijkt. Kloppen ze, dan is het document ongewijzigd én van jou.",
+ cf:["4c","5j","5n"]},
+
+{id:"5n",ch:5,t:"Doelen-tabel",g:G.B,
+ q:"Welke techniek levert vertrouwelijkheid, integriteit, authenticatie én onweerlegbaarheid tegelijk?",
+ o:["Geen enkele: een digitale handtekening dekt alles behalve vertrouwelijkheid",
+    "Een cryptografisch veilige hash","HMAC","Een salt bij het wachtwoord"],a:0,
+ w:"Dit is de tabel die je uit je hoofd moet kennen. <b>Hash</b>: geen sleutel, alleen integriteit. <b>MAC/HMAC</b>: symmetrische sleutel, integriteit én authenticatie. <b>Digitale handtekening</b>: asymmetrisch, integriteit, authenticatie én onweerlegbaarheid. <b>Vertrouwelijkheid</b> krijg je van geen van drieën — daarvoor moet je encrypten.",
+ cf:["5b","5j","5m"]},
+
+{id:"5o",ch:5,t:"Digitale handtekening",g:G.I,
+ q:"Waarom onderteken je de hash van een document en niet het document zelf?",
+ o:["Asymmetrische crypto is traag; de hash is klein en vertegenwoordigt het hele document",
+    "Omdat het document geheim moet blijven","Omdat een hash niet te vervalsen is zonder sleutel",
+    "Omdat het document anders langer wordt dan toegestaan"],a:0,
+ w:"Asymmetrisch versleutelen is ruwweg duizend keer trager dan symmetrisch; een bestand van 100 MB erdoorheen halen is onwerkbaar. De hash is een paar tientallen bytes en verandert bij de kleinste wijziging in het document — dus wie de hash tekent, tekent effectief het hele document.",
+ cf:["5m","4d"]},
+
+{id:"5p",ch:5,t:"Foutcorrectie",g:G.I,
+ q:"Wat kan een error correcting code dat een gewone checksum niet kan?",
+ o:["Kleine fouten niet alleen opsporen maar ook herstellen",
+    "De afzender authenticeren","De data versleutelen","Collisies uitsluiten"],a:0,
+ w:"Een gewone checksum zegt alleen <i>er is iets mis</i>. Een <b>error correcting code</b> voegt zoveel redundantie toe dat de ontvanger de fout ook kan repareren zonder te hoeven vragen om hertransmissie. Nuttig bij ruis, maar net als een checksum weerloos tegen opzet.",
+ cf:["5a"]}
+);
+
+/* ---- H6 Algoritmen ---- */
+CARDS.push(
+{id:"6a",ch:6,t:"Algoritmen",g:G.B,
+ q:"Wat voor soort algoritme is AES (Rijndael)?",
+ o:["Symmetrisch, en de huidige standaard","Asymmetrisch, en de huidige standaard",
+    "Een hashfunctie","Symmetrisch, maar verouderd"],a:0,
+ w:"<b>AES</b> is het <b>symmetrische</b> blokcijfer dat uit de Rijndael-inzending kwam en nu de standaard is. AES-128 geldt als ruim voldoende. Onthoud de indeling in twee assen: <i>soort</i> (symmetrisch / asymmetrisch / hash) en <i>status</i> (verouderd / legacy / actueel).",
+ cf:["6b","6d"]},
+
+{id:"6b",ch:6,t:"Algoritmen",g:G.B,
+ q:"Wat voor soort algoritme is RSA?",
+ o:["Asymmetrisch; RSA-2048 is actueel, RSA-512 veel te zwak",
+    "Symmetrisch en actueel","Een hashfunctie","Asymmetrisch maar volledig verouderd"],a:0,
+ w:"<b>RSA</b> is <b>asymmetrisch</b>. Omdat asymmetrische sleutels per bit veel minder sterkte leveren, heb je er veel meer van nodig: RSA-2048 is de norm, RSA-512 is triviaal te kraken. Vergelijk dat met AES-128, dat met acht keer minder bits ruim veiliger is.",
+ cf:["6a","4d"]},
+
+{id:"6c",ch:6,t:"Algoritmen",g:G.B,
+ q:"Wat voor soort algoritme is SHA-256?",
+ o:["Een hashfunctie, en actueel","Een symmetrisch algoritme","Een asymmetrisch algoritme",
+    "Een hashfunctie, maar verouderd"],a:0,
+ w:"<b>SHA-256</b> is een <b>hashfunctie</b> en is actueel. Hashfuncties hebben geen sleutel — dat is meteen de snelste manier om ze te herkennen. Uit dezelfde familie: SHA-0 en SHA-1 zijn afgeschreven, SHA-2 (waaronder SHA-256) en SHA-3 zijn dat niet.",
+ cf:["6d","6f"]},
+
+{id:"6d",ch:6,t:"Algoritmen",g:G.B,
+ q:"Welk algoritme hieronder is asymmetrisch én actueel?",
+ o:["Curve25519","MD5","Blowfish","RC4"],a:0,
+ w:"<b>Curve25519</b> is elliptische-krommecrypto: <b>asymmetrisch</b> en actueel. MD5 is een gebroken <i>hash</i>, RC4 een afgeschreven <i>symmetrische</i> stroomcijfer, Blowfish een symmetrisch blokcijfer dat je nu niet meer kiest. Let op de valkuil: op een meerkeuzevraag staan er altijd bekende namen uit de verkeerde categorie tussen.",
+ cf:["6f","6a","6b"]},
+
+{id:"6e",ch:6,t:"Algoritmen",g:G.O,
+ q:"Waar dienen DSA en ECDSA voor?",
+ o:["Digitaal ondertekenen","Data versleutelen","Hashen van wachtwoorden",
+    "Symmetrische sleutels genereren"],a:0,
+ w:"<b>DSA</b> en <b>ECDSA</b> zijn <b>handtekeningalgoritmen</b> — de S staat voor Signature. Ze zijn asymmetrisch, maar in tegenstelling tot RSA kun je er niet mee versleutelen; ze zijn er alleen om te ondertekenen en te verifiëren. ECDSA is de variant op elliptische krommen en levert bij kortere sleutels dezelfde sterkte.",
+ cf:["5m","6b"]},
+
+{id:"6f",ch:6,t:"Algoritmen",g:G.B,
+ q:"Waarom mag MD5 niet meer gebruikt worden voor beveiliging?",
+ o:["Er zijn praktisch uitvoerbare collisie-aanvallen op bekend",
+    "De hash is te lang geworden","Het is asymmetrisch en dus te traag",
+    "Er zit geen sleutel in"],a:0,
+ w:"Voor <b>MD5</b> (en inmiddels ook SHA-1) kun je met normale rekenkracht twee verschillende bestanden maken met dezelfde hash. Dan kun je een handtekening van het ene document onder het andere schuiven en klopt de verificatie nog steeds. MD5 als niet-cryptografische checksum voor downloads kan nog; voor beveiliging niet meer.",
+ cf:["5c","6c"]},
+
+{id:"6g",ch:6,t:"Algoritmen",g:G.B,
+ q:"Waarom wordt DES tegenwoordig als onveilig beschouwd?",
+ o:["De sleutel is met 56 bits te kort om brute force te weerstaan",
+    "Het algoritme is nooit gepubliceerd","Het is een hashfunctie zonder collisieweerstand",
+    "Het gebruikt een publieke sleutel"],a:0,
+ w:"<b>DES</b> is symmetrisch en op zichzelf niet slecht ontworpen — het probleem is de <b>sleutellengte</b> van 56 bits, die met moderne hardware in korte tijd volledig af te lopen is. 3DES lapt dat op door DES drie keer toe te passen (168 bits lengte, 112 sterkte), maar geldt inmiddels als legacy: nieuwe systemen gebruiken AES.",
+ cf:["2e","6a"]},
+
+{id:"6h",ch:6,t:"Algoritmen",g:G.B,
+ q:"Je moet nu een systeem ontwerpen. Welke combinatie is verstandig?",
+ o:["AES-256 voor de data, RSA-2048 of Curve25519 voor sleuteluitwisseling, SHA-256 voor hashing",
+    "3DES voor de data, RSA-512 voor sleutels, MD5 voor hashing",
+    "RC4 voor de data, DSA voor sleutels, SHA-1 voor hashing",
+    "Een eigen algoritme, want dat kent niemand"],a:0,
+ w:"Symmetrisch voor het volume, asymmetrisch voor de sleuteluitwisseling, een actuele hash voor integriteit. De andere opties combineren juist de afgeschreven namen: 3DES en RC4 zijn legacy of gebroken, RSA-512 veel te kort, MD5 en SHA-1 collisie-gevoelig. En een eigen algoritme is de klassieke fout — <b>never roll your own crypto</b>.",
+ cf:["6d","2b"]}
+);
+
+/* ---- H7 Certificaten ---- */
+CARDS.push(
+{id:"7a",ch:7,t:"Certificaat",g:G.A,
+ q:"Wat staat er in een X.509-certificaat?",
+ o:["Een publieke sleutel plus identiteitsgegevens, ondertekend door een CA",
+    "Een private sleutel plus het wachtwoord van de eigenaar",
+    "De symmetrische sessiesleutel voor de verbinding",
+    "Een hash van alle bezochte websites"],a:0,
+ w:"Een <b>certificaat</b> koppelt een <span class=\"pub\">publieke sleutel</span> aan een identiteit, en die koppeling is <b>ondertekend door een Certificate Authority</b>. Zonder die handtekening zou iedereen kunnen beweren dat zijn sleutel bij jouw bank hoort. <b>X.509</b> is het standaardformaat. Een private sleutel zit er nooit in — die verlaat de eigenaar nooit.",
+ cf:["4g","7c"]},
+
+{id:"7b",ch:7,t:"CA",g:G.A,
+ q:"Wat is de rol van een Certificate Authority?",
+ o:["Controleren wie je bent en dat vervolgens met een handtekening vastleggen",
+    "Het verkeer tussen browser en server versleutelen",
+    "Sessiesleutels genereren voor elke verbinding",
+    "Wachtwoorden van gebruikers bewaren"],a:0,
+ w:"Een <b>CA</b> is de vertrouwde derde partij: die verifieert dat jij echt de eigenaar van het domein of het bedrijf bent, en ondertekent dan jouw certificaat. Alle vertrouwen in het systeem hangt op de aanname dat de CA zijn werk goed doet — daarom is een gecompromitteerde CA (zoals DigiNotar) zo ernstig.",
+ cf:["7a","7c"]},
+
+{id:"7c",ch:7,t:"Chain of trust",g:G.A,
+ q:"Hoe controleert je browser of een certificaat te vertrouwen is?",
+ o:["Hij volgt de handtekeningen omhoog tot een root die in het systeem al vertrouwd wordt",
+    "Hij vraagt het na bij de website zelf",
+    "Hij vergelijkt het certificaat met een lokale kopie van vorige keer",
+    "Hij controleert alleen of het certificaat niet verlopen is"],a:0,
+ w:"De <b>chain of trust</b>: het servercertificaat is ondertekend door een tussenliggende CA, die weer door een hogere, tot je bij een <b>rootcertificaat</b> uitkomt. Dat root is <b>self-signed</b> en zit al in je besturingssysteem of browser — dáár begint het vertrouwen. Klopt een schakel niet, of ontbreekt de root, dan krijg je een waarschuwing.",
+ cf:["7a","7d"]},
+
+{id:"7d",ch:7,t:"Rootcertificaat",g:G.A,
+ q:"Wat is bijzonder aan een rootcertificaat?",
+ o:["Het is self-signed en wordt vertrouwd omdat het vooraf in je systeem is opgenomen",
+    "Het is ondertekend door de overheid","Het verloopt nooit",
+    "Het bevat de private sleutels van alle onderliggende certificaten"],a:0,
+ w:"Een <b>rootcertificaat</b> heeft niemand boven zich, dus tekent het zichzelf — <b>self-signed</b>. Die handtekening bewijst dus niets; het vertrouwen komt ervandaan dat je OS- of browserleverancier het in de lijst heeft gezet en beheert. Zet iemand daar een eigen root tussen, dan kan die al je verkeer ongemerkt onderscheppen.",
+ cf:["7c"]},
+
+{id:"7e",ch:7,t:"PKI",g:G.A,
+ q:"Wat is een PKI?",
+ o:["Het geheel van CA's, certificaten en procedures waarmee sleutels aan identiteiten gekoppeld worden",
+    "Een algoritme voor asymmetrische encryptie",
+    "Een protocol voor het versleutelen van webverkeer",
+    "Een database met alle publieke sleutels ter wereld"],a:0,
+ w:"<b>Public Key Infrastructure</b> is niet één ding maar de hele organisatie eromheen: de CA's, de uitgifte- en intrekkingsprocedures, de formaten en de vertrouwensrelaties. Het lost het probleem op waar asymmetrische crypto zelf geen antwoord op heeft — <i>van wie is deze publieke sleutel eigenlijk?</i>",
+ cf:["7b","7c"]},
+
+{id:"7f",ch:7,t:"Certificaattypen",g:G.A,
+ q:"Wat is het verschil tussen een DV- en een EV-certificaat?",
+ o:["Bij DV is alleen domeinbezit gecontroleerd, bij EV ook de identiteit van de organisatie",
+    "DV gebruikt sterkere sleutels dan EV","EV is gratis, DV kost geld",
+    "DV werkt alleen op subdomeinen"],a:0,
+ w:"<b>DV</b> (Domain Validated) bewijst alleen dat je het domein beheert — geautomatiseerd en gratis via Let's Encrypt. <b>OV</b> (Organisation Validated) controleert daarnaast het bestaan van de organisatie, <b>EV</b> (Extended Validation) doet de zwaarste controle. Let op: de <b>encryptie is bij alle drie even sterk</b>; het verschil zit puur in hoe goed is nagegaan wie je bent.",
+ cf:["7g"]},
+
+{id:"7g",ch:7,t:"Certificaattypen",g:G.V,
+ q:"Een site heeft een gratis Let's Encrypt-certificaat. Wat kun je daaruit concluderen?",
+ o:["Het verkeer is volwaardig versleuteld, maar er is alleen domeinbezit gecontroleerd",
+    "Het verkeer is zwakker versleuteld dan bij een betaald certificaat",
+    "De organisatie achter de site is geverifieerd",
+    "Het certificaat wordt door browsers niet vertrouwd"],a:0,
+ w:"Het slotje zegt: <b>de verbinding is versleuteld en het certificaat hoort bij dit domein</b>. Het zegt niets over de betrouwbaarheid van de eigenaar — ook een phishingsite kan een geldig DV-certificaat hebben. Dat is precies de klassieke denkfout bij het slotje.",
+ cf:["7f"]},
+
+{id:"7h",ch:7,t:"Fingerprint",g:G.I,
+ q:"Waarvoor gebruik je de fingerprint van een certificaat?",
+ o:["Om via een ander kanaal te controleren of je het juiste certificaat voor je hebt",
+    "Om het certificaat te versleutelen","Om de geldigheidsduur te verlengen",
+    "Om het certificaat in te trekken"],a:0,
+ w:"Een <b>fingerprint</b> is een hash van het hele certificaat: een korte reeks die je met het oog kunt vergelijken. Je gebruikt hem als je het certificaat handmatig wilt verifiëren, bijvoorbeeld door hem telefonisch door te nemen. Weer datzelfde <b>out-of-band</b>-idee.",
+ cf:["3c","8f"]},
+
+{id:"7i",ch:7,t:"Intrekken",g:G.A,
+ q:"Waarom moet een certificaat ingetrokken kunnen worden vóór de vervaldatum?",
+ o:["Omdat de private sleutel gestolen kan zijn, en het certificaat dan misbruikt wordt",
+    "Omdat de CA anders te veel geld misloopt","Omdat de publieke sleutel verloopt",
+    "Omdat het domein anders niet bereikbaar is"],a:0,
+ w:"Lekt de <span class=\"priv\">private sleutel</span>, dan kan een aanvaller zich met dat geldige certificaat voordoen als de server. <b>Revocation</b> maakt het per direct ongeldig. Dat is ook de reden dat certificaten een beperkte <b>geldigheidsduur</b> hebben: hoe korter, hoe kleiner het venster waarin een gestolen sleutel bruikbaar is.",
+ cf:["7d"]},
+
+{id:"7j",ch:7,t:"OpenSSL-bestanden",g:G.B,
+ q:"Wat is het verschil tussen de extensie .pem en extensies als .crt, .key en .csr?",
+ o:[".pem zegt iets over het bestandsformaat, de andere over het doel van de inhoud",
+    ".pem is versleuteld, de andere niet",".pem is voor servers, de rest voor clients",
+    "Er is geen verschil, het zijn synoniemen"],a:0,
+ w:"<code>.pem</code> beschrijft het <b>formaat</b>: base64 met BEGIN/END-regels eromheen. <code>.crt</code> (certificaat), <code>.key</code> (private sleutel), <code>.csr</code> (aanvraag richting de CA) en <code>.pkcs12</code> beschrijven het <b>doel</b>. Een <code>.crt</code> kan dus prima in pem-formaat staan — de twee assen staan los van elkaar.",
+ cf:["7k"]},
+
+{id:"7k",ch:7,t:"OpenSSL-bestanden",g:G.A,
+ q:"Wat stuur je naar de CA als je een certificaat aanvraagt?",
+ o:["Een CSR met je publieke sleutel en je gegevens","Je private sleutel",
+    "Het rootcertificaat van de CA","De fingerprint van je vorige certificaat"],a:0,
+ w:"Een <b>CSR</b> (Certificate Signing Request) bevat je <span class=\"pub\">publieke sleutel</span> en je identiteitsgegevens. De CA controleert die gegevens en tekent ze, en stuurt het certificaat terug. Je <span class=\"priv\">private sleutel</span> gaat nooit mee — die blijft op je eigen server, anders is het hele stelsel waardeloos.",
+ cf:["7j","7a"]}
+);
+
+/* ---- H8 Toepassingen ---- */
+CARDS.push(
+{id:"8a",ch:8,t:"TLS-handshake",g:G.S,
+ q:"Wat is het resultaat van de TLS-handshake?",
+ o:["Beide partijen hebben dezelfde symmetrische sessiesleutel zonder die verstuurd te hebben",
+    "De server kent de private sleutel van de client",
+    "Alle data wordt vanaf dan asymmetrisch versleuteld",
+    "De client heeft een certificaat van de CA gekregen"],a:0,
+ w:"De handshake bestaat om één ding: een gedeelde <b>sessiesleutel</b> tot stand brengen. Daarna gaat álle data er symmetrisch overheen, want dat is duizend keer sneller. Asymmetrische crypto wordt alleen in de handshake gebruikt — dit is het <b>hybride model</b> in de praktijk.",
+ cf:["4f","8b"]},
+
+{id:"8b",ch:8,t:"TLS-handshake",g:G.V,
+ q:"Welke gegevens gaan tijdens een HTTPS-sessie asymmetrisch versleuteld over de lijn?",
+ o:["Alleen wat nodig is om de sessiesleutel af te leiden","Alle verstuurde data",
+    "Alleen de wachtwoorden","Niets, TLS is volledig symmetrisch"],a:0,
+ w:"Dit is de klassieke valkuil. Asymmetrisch wordt <b>alleen in de handshake</b> gebruikt om veilig tot een sessiesleutel te komen. Vanaf dat moment is alles symmetrisch. Zou TLS al je verkeer asymmetrisch versleutelen, dan zou het web onwerkbaar traag zijn.",
+ cf:["8a","4d"]},
+
+{id:"8c",ch:8,t:"TLS-handshake",g:G.B,
+ q:"Wat stuurt de client als allereerste bij het opzetten van een TLS-verbinding?",
+ o:["Een lijst met algoritmen die hij ondersteunt","Zijn eigen certificaat",
+    "De sessiesleutel","Zijn wachtwoord"],a:0,
+ w:"De volgorde: (1) client stuurt de lijst met ondersteunde <b>cipher suites</b>, (2) de server kiest de sterkste die ze allebei kennen en stuurt zijn <b>X.509-certificaat</b> met publieke sleutel, (3) de client controleert dat certificaat en stuurt versleutelde willekeurige data, (4) beide leiden daaruit de <b>sessiesleutel</b> af, (5) de rest gaat symmetrisch.",
+ cf:["8a","8d"]},
+
+{id:"8d",ch:8,t:"TLS-handshake",g:G.A,
+ q:"Waarom stuurt de server zijn certificaat en niet alleen zijn publieke sleutel?",
+ o:["Een kale publieke sleutel bewijst niet van wie hij is; het certificaat legt die koppeling vast",
+    "Omdat de publieke sleutel anders te groot is","Omdat het certificaat de sessiesleutel bevat",
+    "Omdat de client anders niet weet welk algoritme te gebruiken"],a:0,
+ w:"Zonder certificaat kan een man-in-the-middle zijn eigen publieke sleutel opsturen en alles meelezen. Het <b>certificaat</b> koppelt de sleutel via de <b>chain of trust</b> aan de domeinnaam, en dát is wat je browser controleert voordat hij het slotje toont.",
+ cf:["7c","4g"]},
+
+{id:"8e",ch:8,t:"SSH",g:G.A,
+ q:"Hoe controleert SSH de identiteit van de server, anders dan TLS?",
+ o:["De gebruiker vertrouwt de sleutel de eerste keer zelf en SSH onthoudt hem in known_hosts",
+    "Via een CA en een chain of trust, net als TLS",
+    "Via een wachtwoord dat de server terugstuurt","Via een certificaat van de systeembeheerder"],a:0,
+ w:"SSH heeft standaard <b>geen CA en geen PKI</b>. De eerste keer krijg je de fingerprint te zien en beslis je zelf — <i>trust on first use</i>. Daarna staat de sleutel in <code>~/.ssh/known_hosts</code> en waarschuwt SSH luid als hij ineens verandert. Zwakker bij de eerste verbinding, maar zonder afhankelijkheid van CA's.",
+ cf:["7c","8f"]},
+
+{id:"8f",ch:8,t:"SSH",g:G.A,
+ q:"SSH waarschuwt dat de host key van een bekende server is veranderd. Wat betekent dat?",
+ o:["Óf de server is opnieuw geïnstalleerd, óf iemand zit ertussen",
+    "Het certificaat is verlopen","Je wachtwoord is verkeerd",
+    "De verbinding is niet versleuteld"],a:0,
+ w:"De sleutel in <code>known_hosts</code> komt niet meer overeen. Dat kan onschuldig zijn (herinstallatie), maar het is precies wat je ook zou zien bij een <b>man-in-the-middle</b>. Daarom mag je die waarschuwing nooit wegklikken zonder de nieuwe fingerprint <b>out-of-band</b> te verifiëren.",
+ cf:["8e","7h"]},
+
+{id:"8g",ch:8,t:"Code signing",g:G.O,
+ q:"Wat is het doel van code signing?",
+ o:["Aantonen dat software van de opgegeven maker komt en niet gewijzigd is",
+    "De broncode geheimhouden","De software sneller laten draaien",
+    "Voorkomen dat de software gekopieerd wordt"],a:0,
+ w:"<b>Code signing</b> geeft <b>integriteit</b> (de code is onderweg niet aangepast), <b>authenticatie</b> (hij komt van deze uitgever) en <b>onweerlegbaarheid</b>. Het geeft géén <b>vertrouwelijkheid</b>: de code blijft gewoon leesbaar. En het zegt niets over of de software goed of kwaadaardig is — alleen wie hem gemaakt heeft.",
+ cf:["5m","8h"]},
+
+{id:"8h",ch:8,t:"Code signing",g:G.I,
+ q:"In een ondertekende jar staan MANIFEST.MF, THEOBALD.SF en THEOBALD.RSA. Hoe verifieert jarsigner?",
+ o:["In omgekeerde volgorde: eerst het certificaat, dan de handtekening, dan het manifest, dan de bestanden",
+    "In dezelfde volgorde als bij het ondertekenen",
+    "Alleen het manifest, de rest is optioneel","Door de jar opnieuw te ondertekenen en te vergelijken"],a:0,
+ w:"Ondertekenen bouwt op: het <b>manifest</b> krijgt per bestand een hash, het <code>.SF</code>-bestand hasht het manifest, en het <code>.RSA</code>-bestand bevat de handtekening plus het certificaat. Verifiëren gaat <b>precies andersom</b>: certificaat via de chain of trust, dan de handtekening over het SF-bestand, dan de manifesthashes, dan pas de bestanden zelf.",
+ cf:["8g","7c"]},
+
+{id:"8i",ch:8,t:"Code signing",g:G.O,
+ q:"Waarvoor dient een timestamp van een Time Stamping Authority bij ondertekende code?",
+ o:["Vastleggen dat er getekend is toen het certificaat nog geldig was",
+    "De software van een vervaldatum voorzien","De ondertekening versnellen",
+    "De private sleutel te vernieuwen"],a:0,
+ w:"Certificaten verlopen, maar ondertekende software blijft in omloop. Een <b>TSA</b> zet er een betrouwbare, zelf ondertekende tijdstempel op. Zo blijft de handtekening geldig na de vervaldatum, en kan een aanvaller met een gestolen sleutel niet doen alsof hij vroeger tekende.",
+ cf:["8h","7i"]},
+
+{id:"8j",ch:8,t:"Schijfversleuteling",g:G.S,
+ q:"Waarom versleutel je een schijf niet direct met de sleutel die uit het wachtwoord volgt?",
+ o:["Dan zou je bij elke wachtwoordwijziging de hele schijf opnieuw moeten versleutelen",
+    "Dan zou de schijf te traag worden","Dan zou het wachtwoord op de schijf komen te staan",
+    "Dat kan technisch niet"],a:0,
+ w:"Er zit een <b>masterkey</b> tussen: de schijf wordt met die masterkey versleuteld, en de masterkey zelf wordt versleuteld met de sleutel uit je wachtwoord. Wijzig je je wachtwoord, dan hoef je alleen dat kleine pakketje opnieuw te versleutelen. Dat maakt ook meerdere gebruikers op één schijf mogelijk — elk met een eigen kopie van dezelfde masterkey.",
+ cf:["8k"]},
+
+{id:"8k",ch:8,t:"Schijfversleuteling",g:G.V,
+ q:"Waartegen beschermt schijfversleuteling wél en waartegen niet?",
+ o:["Wel tegen diefstal van het apparaat, niet tegen aanvallen terwijl je ingelogd bent",
+    "Tegen alles, zolang het wachtwoord sterk is","Alleen tegen virussen",
+    "Alleen tegen netwerkaanvallen"],a:0,
+ w:"Staat het apparaat uit, dan is de schijf een blok ruis — <b>vertrouwelijkheid bij verlies of diefstal</b>. Maar zodra je bent ingelogd, is alles ontsleuteld en gewoon leesbaar voor alles wat op je systeem draait. Schijfversleuteling beschermt data <i>at rest</i>, niet data <i>in use</i>.",
+ cf:["8j"]}
+);
+
+/* ---- H9 Authenticatie en autorisatie ---- */
+CARDS.push(
+{id:"9a",ch:9,t:"Identificatie",g:G.A,
+ q:"Wat is het verschil tussen identificatie en authenticatie?",
+ o:["Identificatie is claimen wie je bent, authenticatie is die claim bewijzen",
+    "Identificatie is bewijzen, authenticatie is claimen",
+    "Ze betekenen hetzelfde","Identificatie bepaalt wat je mag, authenticatie wie je bent"],a:0,
+ w:"Je gebruikersnaam intikken is <b>identificatie</b>: een claim. Je wachtwoord erbij is <b>authenticatie</b>: het bewijs. Vergelijk het met je naam noemen aan de balie tegenover je paspoort laten zien. Een claim zonder bewijs stelt niets voor.",
+ cf:["9b"]},
+
+{id:"9b",ch:9,t:"Autorisatie",g:G.B,
+ q:"Wat regelt autorisatie?",
+ o:["Wat een geauthenticeerde gebruiker mag doen","Wie de gebruiker is",
+    "Hoe de gebruiker zijn identiteit bewijst","Of het verkeer versleuteld is"],a:0,
+ w:"<b>Autorisatie</b> komt ná authenticatie en gaat over <b>rechten</b>: welke bestanden mag je lezen, welke knoppen zie je. Je kunt perfect geauthenticeerd zijn en toch nergens bij mogen. Onthoud de volgorde: identificatie (wie zeg je dat je bent) → authenticatie (bewijs) → autorisatie (wat mag je).",
+ cf:["9a","11a"]},
+
+{id:"9c",ch:9,t:"Autorisatie",g:G.B,
+ q:"Een systeem herkent je wel maar geeft geen toegang tot een map. Wat gaat er mis?",
+ o:["De autorisatie, niet de authenticatie","De authenticatie",
+    "De identificatie","De versleuteling"],a:0,
+ w:"Herkennen lukte — dus identificatie en authenticatie zijn geslaagd. Wat ontbreekt zijn de <b>rechten</b>: dat is <b>autorisatie</b>. In de praktijk zie je dat als het verschil tussen een 401 (niet ingelogd) en een 403 (wel ingelogd, mag niet).",
+ cf:["9b","11a"]}
+);
+
+/* ---- H10 Authenticatie ---- */
+CARDS.push(
+{id:"10a",ch:10,t:"Factoren",g:G.A,
+ q:"Welke drie klassen van authenticatiefactoren zijn er?",
+ o:["Iets dat je weet, iets dat je bezit, iets dat je bent",
+    "Iets dat je weet, iets dat je ziet, iets dat je zegt",
+    "Wachtwoord, pincode, wachtwoordzin","Kennis, autorisatie, identificatie"],a:0,
+ w:"<b>Weten</b> (wachtwoord, pincode), <b>bezitten</b> (telefoon, token, pas) en <b>zijn</b> (vingerafdruk, gezicht, iris). Elke klasse faalt op een andere manier: kennis lekt uit, bezit raak je kwijt, biometrie kun je niet vervangen als hij eenmaal gekopieerd is.",
+ cf:["10b"]},
+
+{id:"10b",ch:10,t:"Factoren",g:G.A,
+ q:"Inloggen met een wachtwoord én daarna een pincode: hoeveel factoren zijn dat?",
+ o:["Eén factor","Twee factoren","Drie factoren","Geen enkele factor"],a:0,
+ w:"Allebei zijn ze <b>iets dat je weet</b>, dus het is <b>één</b> factor — twee keer. Voor echte <b>tweefactorauthenticatie</b> moeten de factoren uit <b>verschillende klassen</b> komen én <b>onafhankelijk</b> zijn. Een code die naar hetzelfde toestel gaat waarop je inlogt, is daarom zwakker dan het lijkt.",
+ cf:["10a","10j"]},
+
+{id:"10c",ch:10,t:"Wachtwoordsterkte",g:G.A,
+ q:"Waarom is 'correcthorsebatterystaple' sterker dan 'Tr0ub4dor&3'?",
+ o:["Het is veel langer, en lengte levert meer entropie op dan tekensubstituties",
+    "Het bevat geen cijfers en is daarom moeilijker te raden",
+    "Het staat niet in het woordenboek","Het is korter en dus sneller te typen"],a:0,
+ w:"Aanvallers proberen niet letter voor letter, maar met woordenlijsten en de bekende trucs (a→4, o→0). Die substituties leveren nauwelijks <b>entropie</b> op. Vier willekeurig gekozen woorden uit een lijst van 2048 geven 4 × 11 = 44 bits — én zijn beter te onthouden. Lengte verslaat complexiteit.",
+ cf:["2g","10d"]},
+
+{id:"10d",ch:10,t:"Brute force",g:G.A,
+ q:"Wat is de meest effectieve maatregel tegen het online uitproberen van wachtwoorden?",
+ o:["Een oplopende wachttijd na elke mislukte poging",
+    "Wachtwoorden elke maand laten wijzigen","Alleen cijfers toestaan",
+    "De gebruikersnaam geheimhouden"],a:0,
+ w:"Een <b>oplopende vertraging</b> (of tijdelijke blokkade) maakt het aantal pogingen per uur zo klein dat brute force zinloos wordt, zonder dat een echte gebruiker met een typefout buitengesloten raakt. Verplicht periodiek wijzigen werkt averechts: mensen maken er dan <i>Zomer2026!</i> van.",
+ cf:["10c","10e"]},
+
+{id:"10e",ch:10,t:"Wachtwoordaanvallen",g:G.A,
+ q:"Wat is credential stuffing?",
+ o:["Elders gelekte gebruikersnaam-wachtwoordparen massaal uitproberen op andere sites",
+    "Een wachtwoordveld overladen met te veel tekens",
+    "Hashes vergelijken met een rainbow table","Een wachtwoord raden op basis van persoonlijke gegevens"],a:0,
+ w:"Omdat mensen wachtwoorden hergebruiken, is één gelekte database genoeg om overal in te breken. De aanvaller hoeft niets te kraken; hij probeert werkende combinaties. Vandaar het advies: voor elke dienst een uniek wachtwoord, plus tweefactor. Dít is waarom hergebruik zo gevaarlijk is.",
+ cf:["5f","10d"]},
+
+{id:"10f",ch:10,t:"Challenge-response",g:G.A,
+ q:"Wat is het voordeel van challenge-response boven het versturen van een wachtwoord?",
+ o:["Het geheim gaat nooit over de lijn, dus afluisteren levert niets bruikbaars op",
+    "Het is sneller","Er is geen sleutel nodig","De server hoeft niets op te slaan"],a:0,
+ w:"De server stuurt een <b>challenge</b> — iets onvoorspelbaars — en jij bewijst met je geheim dat je het antwoord kunt berekenen. Het geheim zelf verlaat je nooit, en omdat de challenge elke keer anders is, kan een afluisteraar het antwoord niet hergebruiken (<b>replay</b>).",
+ cf:["10g","10h"]},
+
+{id:"10g",ch:10,t:"SSH-sleutelauthenticatie",g:G.A,
+ q:"Hoe bewijst de client zich bij SSH-authenticatie met een sleutelpaar?",
+ o:["De server versleutelt willekeurige data met de publieke sleutel; alleen de echte client kan die ontsleutelen",
+    "De client stuurt zijn private sleutel naar de server",
+    "De server stuurt zijn eigen wachtwoord ter controle",
+    "Beide partijen sturen hun publieke sleutel en vergelijken"],a:0,
+ w:"De publieke sleutel van de gebruiker staat op de server. Die versleutelt er iets willekeurigs mee; alleen wie de bijbehorende <span class=\"priv\">private sleutel</span> heeft, krijgt het open en kan antwoorden. Een vorm van <b>challenge-response</b>, en veiliger dan een wachtwoord omdat er nooit een geheim over de lijn gaat.",
+ cf:["10f","4b"]},
+
+{id:"10h",ch:10,t:"OTP",g:G.A,
+ q:"Wat is het verschil tussen HOTP en TOTP?",
+ o:["HOTP telt op met een teller, TOTP is gebaseerd op de tijd",
+    "HOTP gebruikt hashing, TOTP encryptie","HOTP is asymmetrisch, TOTP symmetrisch",
+    "HOTP is voor hardware, TOTP alleen voor apps"],a:0,
+ w:"Allebei zijn ze een HMAC over een gedeelde sleutel plus een teller. Bij <b>HOTP</b> (RFC 4226) loopt die teller op per gebruik — de code blijft geldig tot je hem gebruikt. Bij <b>TOTP</b> (RFC 6238) is de teller de <b>tijd</b>, meestal per dertig seconden, dus de code verloopt vanzelf. De <i>T</i> van tijd is je ezelsbruggetje.",
+ cf:["10i","5k"]},
+
+{id:"10i",ch:10,t:"OTP",g:G.A,
+ q:"Waarom moet je bij HOTP soms een paar codes vooruit accepteren?",
+ o:["De teller van het token kan voorlopen als er codes gegenereerd zijn zonder ze te gebruiken",
+    "Omdat de klok van de server kan afwijken","Omdat de sleutel verloopt",
+    "Omdat de gebruiker soms typefouten maakt"],a:0,
+ w:"Bij <b>HOTP</b> loopt de teller op zodra je een code opvraagt, ook als je hem niet gebruikt. Server en token raken dan uit de pas, dus de server accepteert een klein venster vooruit. Bij <b>TOTP</b> speelt dat niet — daar is het probleem juist <b>klokdrift</b>, dus wordt een venster in de tijd toegestaan.",
+ cf:["10h"]},
+
+{id:"10j",ch:10,t:"Tokens",g:G.A,
+ q:"Waarom geldt een los hardwaretoken als veiliger dan een authenticator-app op je telefoon?",
+ o:["Het is een apart apparaat, dus malware op je computer of telefoon komt er niet bij",
+    "Het gebruikt sterkere algoritmen","De codes zijn langer",
+    "Het hoeft geen sleutel te delen met de server"],a:0,
+ w:"De kracht van tweefactor zit in <b>onafhankelijkheid</b>. Een <b>hardwaretoken</b> staat helemaal los; een <b>softwaretoken</b> deelt het apparaat met alles wat daar verder op draait. Log je op je telefoon in én ontvang je daar de code, dan is de tweede factor grotendeels weg — de <b>out-of-band</b>-gedachte gaat dan niet meer op.",
+ cf:["10b","3c"]},
+
+{id:"10k",ch:10,t:"Biometrie",g:G.A,
+ q:"Wat is het fundamentele nadeel van biometrie als authenticatiefactor?",
+ o:["Je kunt je vingerafdruk niet vervangen als hij eenmaal gekopieerd is",
+    "Biometrie is nooit uniek genoeg","Het werkt alleen op moderne telefoons",
+    "Het is niet te combineren met andere factoren"],a:0,
+ w:"Een gelekt wachtwoord verander je; een gelekte vingerafdruk niet — die heb je je leven lang. Daar komt bij dat biometrie niet exact vergelijkt maar met een drempelwaarde werkt, dus er zijn altijd valse acceptaties en afwijzingen. Daarom is biometrie prima als gemak, maar zelden als enige factor.",
+ cf:["10a"]},
+
+{id:"10m",ch:10,t:"SSO",g:G.A,
+ q:"Wat is single sign-on?",
+ o:["Eén keer inloggen bij een centrale partij en daarmee toegang tot meerdere diensten",
+    "Eén wachtwoord dat je overal opnieuw intikt","Inloggen met precies één factor",
+    "Een wachtwoordmanager die je wachtwoorden invult"],a:0,
+ w:"Bij <b>SSO</b> authenticeer je bij één <b>identity provider</b>; de aangesloten diensten vertrouwen diens uitspraak. Minder wachtwoorden, centraal in- en uitschakelen van accounts. Keerzijde: die ene inlog is een <b>single point of failure</b>, dus juist daar wil je sterke tweefactor.",
+ cf:["10n","11d"]},
+
+{id:"10n",ch:10,t:"SAML",g:G.A,
+ q:"Wat doet SAML?",
+ o:["Een identity provider laat via een ondertekende verklaring aan een dienst weten wie je bent",
+    "Het versleutelt het verkeer tussen browser en server",
+    "Het slaat wachtwoorden gehasht op","Het genereert eenmalige codes"],a:0,
+ w:"<b>SAML</b> is het XML-formaat waarin een <b>IdP</b> een ondertekende <i>assertion</i> over jouw identiteit aan een <b>service provider</b> doorgeeft. Die handtekening is essentieel: daarmee weet de dienst dat de verklaring echt van de IdP komt. SURFconext werkt zo, met een <b>wayf</b>-scherm om je eigen instelling te kiezen.",
+ cf:["10m","11h"]},
+
+{id:"10o",ch:10,t:"LDAP",g:G.B,
+ q:"Waarvoor wordt LDAP in een organisatie gebruikt?",
+ o:["Als centrale directory met gebruikers, groepen en hun gegevens",
+    "Als protocol om verkeer te versleutelen","Als algoritme om wachtwoorden te hashen",
+    "Als methode om certificaten in te trekken"],a:0,
+ w:"<b>LDAP</b> is de centrale gebruikersadministratie waar systemen op aansluiten: één plek voor accounts en groepen. Nauw verweven met autorisatie, want groepslidmaatschap bepaalt vaak de rechten. Neem je iemand uit dienst, dan sluit één wijziging alle deuren tegelijk.",
+ cf:["10m","9b"]}
+);
+
+/* ---- H11 Autorisatie, OAuth en PKCE ---- */
+CARDS.push(
+{id:"11a",ch:11,t:"Toegangsrechten",g:G.B,
+ q:"Wat kun je met een ACL dat met klassieke chmod-rechten niet kan?",
+ o:["Rechten per individuele gebruiker of groep instellen, niet alleen voor eigenaar/groep/rest",
+    "Bestanden versleutelen","Rechten automatisch laten verlopen",
+    "Wachtwoorden per bestand instellen"],a:0,
+ w:"<code>chmod</code> kent maar drie categorieën: eigenaar, groep, en alle anderen. Een <b>ACL</b> is een lijst met losse regels, zodat je precies één collega leestoegang kunt geven zonder een nieuwe groep aan te maken. Beide gaan over <b>autorisatie</b>: wat mag een al geauthenticeerde gebruiker.",
+ cf:["9b"]},
+
+{id:"11b",ch:11,t:"OAuth",g:G.B,
+ q:"Wat is OAuth 2.0 bedoeld om te regelen?",
+ o:["Autorisatie: een app namens jou beperkte toegang geven tot je gegevens bij een andere dienst",
+    "Authenticatie: vaststellen wie de gebruiker is",
+    "Versleuteling van het verkeer","Het veilig opslaan van wachtwoorden"],a:0,
+ w:"Dit is de meest gestelde strikvraag. <b>OAuth is een autorisatieprotocol, geen authenticatieprotocol.</b> Het regelt dat een app namens jou bij je gegevens mag, zonder dat je je wachtwoord afgeeft. Wil je er inloggen mee bouwen, dan heb je de uitbreiding <b>OpenID Connect</b> nodig.",
+ cf:["11c","9b"]},
+
+{id:"11c",ch:11,t:"OAuth",g:G.A,
+ q:"Waarom is een access token op zichzelf geen bewijs van iemands identiteit?",
+ o:["Het zegt alleen wat er mag, niet wie het gebruikt of hoe die is ingelogd",
+    "Omdat het te kort geldig is","Omdat het niet ondertekend is",
+    "Omdat het over een onversleutelde verbinding gaat"],a:0,
+ w:"Een <b>access token</b> is een sleutel, geen paspoort: wie hem heeft, mag wat erop staat. Bouw je login op de enkele constatering <i>ik kreeg een geldig token</i>, dan werkt een gestolen of elders verkregen token net zo goed. Daarvoor bestaat het <b>id_token</b> van OpenID Connect, dat wél over de gebruiker gaat.",
+ cf:["11b","11f"]},
+
+{id:"11d",ch:11,t:"OAuth-rollen",g:G.B,
+ q:"Wie is de resource owner in OAuth?",
+ o:["De gebruiker aan wie de gegevens toebehoren","De app die toegang vraagt",
+    "De server waar de gegevens staan","De partij die de tokens uitgeeft"],a:0,
+ w:"De <b>resource owner</b> ben jij — jij bezit de gegevens en geeft toestemming. De <b>client</b> is de app die iets wil, de <b>authorization server</b> geeft na jouw toestemming tokens uit, en de <b>resource server</b> (web-API) levert de data op vertoon van een geldig token.",
+ cf:["11e","11b"]},
+
+{id:"11e",ch:11,t:"OAuth-endpoints",g:G.B,
+ q:"Wat is het verschil tussen het authorization endpoint en het token endpoint?",
+ o:["Op het eerste geeft de gebruiker toestemming in de browser, op het tweede ruilt de app de code om voor tokens",
+    "Het eerste is voor mobiel, het tweede voor web",
+    "Het eerste geeft tokens uit, het tweede codes",
+    "Er is geen verschil, het zijn twee namen voor hetzelfde"],a:0,
+ w:"Naar <code>/oauth2/authorize</code> wordt de <b>gebruiker</b> gestuurd: daar logt hij in en geeft toestemming, met als resultaat een <b>authorization code</b> in de redirect. Naar <code>/oauth2/token</code> praat de <b>app</b> rechtstreeks (back-channel) om die code in te wisselen voor een <b>access token</b>. Twee kanalen, met opzet gescheiden.",
+ cf:["11f","11g"]},
+
+{id:"11f",ch:11,t:"OAuth-tokens",g:G.S,
+ q:"Waarom krijgt de app eerst een authorization code en niet meteen een access token?",
+ o:["De code gaat via de browser en is kortlevend en eenmalig; het token gaat via een direct kanaal",
+    "Omdat het token dan te lang zou worden",
+    "Omdat de gebruiker de code moet overtypen","Omdat de code langer geldig is dan het token"],a:0,
+ w:"De redirect via de browser is zichtbaar: in de adresbalk, in logs, in de geschiedenis. Daarom gaat daar alleen een <b>authorization code</b> overheen — eenmalig en maximaal een minuut of tien geldig. Het echte <b>access token</b> wordt over een directe server-naar-serververbinding opgehaald, buiten het zicht van de browser.",
+ cf:["11e","11h"]},
+
+{id:"11g",ch:11,t:"OAuth-tokens",g:G.S,
+ q:"Waarvoor dient een refresh token?",
+ o:["Een nieuw access token ophalen zonder de gebruiker opnieuw lastig te vallen",
+    "Het wachtwoord van de gebruiker vernieuwen","De sessiesleutel verversen",
+    "Het certificaat van de server controleren"],a:0,
+ w:"<b>Access tokens</b> zijn expres kortlevend, zodat een gelekt token snel waardeloos is. Met een <b>refresh token</b> haalt de app stilletjes een nieuw exemplaar op. Dat maakt het refresh token juist waardevoller en gevoeliger — het wordt daarom alleen aan de vertrouwde back-end gegeven, nooit aan browsercode.",
+ cf:["11f"]},
+
+{id:"11h",ch:11,t:"PKCE",g:G.S,
+ q:"Waartegen beschermt PKCE?",
+ o:["Tegen een aanvaller die de authorization code onderschept en zelf inwisselt",
+    "Tegen het afluisteren van het access token","Tegen zwakke wachtwoorden",
+    "Tegen een verlopen certificaat"],a:0,
+ w:"Op mobiel komt de redirect binnen via een URL-handler, en een kwaadaardige app kan zich voor diezelfde handler registreren en de <b>authorization code</b> opvangen. <b>PKCE</b> (RFC 7636) maakt die code op zichzelf waardeloos: zonder het bijbehorende geheim krijgt de dief er geen token voor.",
+ cf:["11i","11f"]},
+
+{id:"11i",ch:11,t:"PKCE",g:G.S,
+ q:"Hoe werkt PKCE technisch?",
+ o:["De app verzint een code_verifier, stuurt de SHA-256 daarvan mee, en bewijst bij het inwisselen dat hij het origineel heeft",
+    "De app versleutelt de code met de publieke sleutel van de server",
+    "De app ondertekent de code met zijn private sleutel",
+    "De server stuurt een tweede code via een ander kanaal"],a:0,
+ w:"De app maakt een willekeurige <b>code_verifier</b> en stuurt bij de autorisatieaanvraag alleen de hash mee: de <b>code_challenge</b>. Bij het inwisselen stuurt hij de verifier zelf. De server hasht en vergelijkt. Wie alleen de code onderschept, mist de verifier. Let op: alleen <code>S256</code> (SHA-256) telt als veilig; <code>plain</code> is zinloos.",
+ cf:["11h","5b"]},
+
+{id:"11j",ch:11,t:"OAuth",g:G.S,
+ q:"Waarom is een client_secret ongeschikt voor een mobiele app of single-page app?",
+ o:["Die code staat op het apparaat van de gebruiker en is dus uit te lezen",
+    "Omdat het secret te lang is voor mobiel","Omdat mobiele apps geen HTTPS gebruiken",
+    "Omdat het secret elke dag verandert"],a:0,
+ w:"Alles wat je meelevert in een app of in browsercode kan worden uitgelezen — dan is het geen geheim meer. Zulke <b>public clients</b> hebben daarom geen client_secret maar gebruiken <b>PKCE</b>: het geheim wordt per keer verzonnen en verlaat het apparaat nooit.",
+ cf:["11i","11h"]},
+
+{id:"11k",ch:11,t:"OAuth",g:G.V,
+ q:"Wat is het voordeel van OAuth boven een app je wachtwoord geven?",
+ o:["De app krijgt beperkte, intrekbare toegang zonder je wachtwoord te kennen",
+    "De app werkt daardoor sneller","Je wachtwoord wordt sterker versleuteld",
+    "Je hoeft niet meer in te loggen"],a:0,
+ w:"Geef je je wachtwoord, dan kan de app <b>alles</b> wat jij kunt, voor altijd, ook je wachtwoord wijzigen. Met OAuth krijgt hij een token met een afgebakende <b>scope</b>, dat je op elk moment kunt intrekken zonder je wachtwoord te veranderen. Dat is precies het probleem dat OAuth is komen oplossen.",
+ cf:["11b","11g"]}
+);
+
+/* ---- H12 Bronnen ---- */
+CARDS.push(
+{id:"12a",ch:12,t:"Bronnen",g:G.B,
+ q:"Waar zoek je een betrouwbaar overzicht van veelvoorkomende kwetsbaarheden in webapplicaties?",
+ o:["OWASP","Een willekeurige securityblog","Stack Overflow","De release notes van je framework"],a:0,
+ w:"<b>OWASP</b> is de referentie voor webapplicatiebeveiliging, met de OWASP Top 10 als bekendste product. Andere gezaghebbende bronnen uit het dictaat: <b>NIST</b> (Amerikaanse standaarden en aanbevolen sleutellengtes), <b>ENISA</b> (Europees), het Duitse <b>BSI</b> en Bruce <b>Schneier</b>.",
+ cf:["12b"]},
+
+{id:"12b",ch:12,t:"Bronnen",g:G.B,
+ q:"Waarom moet je bij crypto-advies letten op de datum van de bron?",
+ o:["Aanbevelingen verouderen: wat vroeger veilig heette, is nu afgeschreven",
+    "Omdat oude bronnen niet leesbaar zijn","Omdat algoritmen gepatenteerd raken",
+    "Omdat de auteur anders niet te vertrouwen is"],a:0,
+ w:"MD5, SHA-1, DES en RSA-512 stonden ooit gewoon in de aanbevelingen. Rekenkracht groeit en aanvallen worden beter, dus adviezen over sleutellengtes en algoritmen hebben een houdbaarheidsdatum. Daarom kijk je naar de <b>actuele</b> uitgave van NIST of ENISA, niet naar een tutorial uit 2009.",
+ cf:["12a","6f"]}
+);
+
+/* @CARDS@ */
+
+
+/* ============ OPTIESETS OP TENTAMENNIVEAU ============
+   De oorspronkelijke bank had een dodelijk lek: in 93 van de 100 gevallen
+   was het juiste antwoord de langste optie. Je kon dus scoren zonder kennis.
+
+   Elke set hieronder volgt drie regels:
+   1. Lengtepariteit  -- alle opties even lang, geen enkel signaal in de vorm.
+   2. Homogeniteit    -- zelfde grammaticale vorm, zelfde soort bewering.
+   3. Echte afleiders -- elke foute optie is het JUISTE antwoord op een
+      naburig begrip. Er valt dus niets weg te strepen; je moet sorteren.
+   Index 0 is steeds het juiste antwoord; de app husselt bij het tonen. */
+
+const HARDQ={
+ "4b":"Je stuurt Bob een contract dat onderweg door niemand gelezen mag worden. Met welke sleutel versleutel je?",
+ "4c":"Je publiceert een verklaring en wilt dat iedereen kan controleren dat zij echt van jou komt. Met welke sleutel versleutel je?",
+ "6h":"Je ontwerpt vandaag een nieuw systeem. Welke combinatie is als geheel verantwoord?",
+ "10b":"Een dienst vraagt eerst je wachtwoord en daarna een pincode. Hoeveel factoren zijn dat?"
+};
+
+const HARD={
+
+/* ---- H1 ---- */
+"1a":["Vertrouwelijkheid, integriteit, authenticatie, onweerlegbaarheid",
+      "Vertrouwelijkheid, integriteit, beschikbaarheid, onweerlegbaarheid",
+      "Vertrouwelijkheid, anonimiteit, authenticatie, onweerlegbaarheid",
+      "Vertrouwelijkheid, integriteit, authenticatie, beschikbaarheid"],
+
+"1b":["De afzender kan achteraf niet ontkennen dat hij het stuurde",
+      "De ontvanger weet zeker van wie het bericht afkomstig is",
+      "Het bericht is onderweg aantoonbaar niet gewijzigd geraakt",
+      "Alleen de bedoelde ontvanger kan de inhoud werkelijk lezen"],
+
+"1c":["Coderen kent geen geheim, encrypten gebruikt een geheime sleutel",
+      "Coderen gebruikt een sleutel, encrypten een openbaar algoritme",
+      "Coderen is omkeerbaar, encrypten is per definitie eenrichting",
+      "Coderen werkt op tekst, encrypten alleen op binaire bestanden"],
+
+"1d":["De onleesbare uitvoer die uit het encryptieproces komt",
+      "De leesbare invoer die het encryptieproces binnengaat",
+      "De geheime waarde die het encryptieproces aanstuurt",
+      "De vaste samenvatting die een hashfunctie oplevert"],
+
+/* ---- H2 ---- */
+"2a":["Alles behalve de sleutel mag bekend zijn zonder verlies van veiligheid",
+      "Elk algoritme moet publiek getoetst zijn voordat je het in gebruik neemt",
+      "Het algoritme moet geheim blijven om de veiligheid te kunnen garanderen",
+      "De sleutel moet minstens even lang zijn als het te versleutelen bericht"],
+
+"2b":["Het zelfbedachte algoritme was geheim en bleek zwak toen het uitlekte",
+      "Het algoritme was openbaar, maar de gekozen sleutels waren veel te kort",
+      "Het algoritme was sterk, maar de implementatie lekte de sleutel uit",
+      "Het algoritme was verouderd en werd desondanks nog jaren gebruikt"],
+
+"2c":["De cryptotekst geeft geen enkele informatie over de platte tekst prijs",
+      "De sleutel is minstens even lang als de te versleutelen platte tekst",
+      "De cryptotekst is met geen enkele bestaande computer te ontsleutelen",
+      "Het algoritme is wiskundig bewezen vrij van elke zwakke plek"],
+
+"2d":["Met sleutel efficiënt te berekenen, zonder sleutel praktisch onkraakbaar",
+      "Zonder sleutel efficiënt te berekenen, met sleutel praktisch onkraakbaar",
+      "Met sleutel efficiënt te berekenen, zonder sleutel wiskundig onmogelijk",
+      "Met sleutel traag te berekenen, zonder sleutel praktisch onkraakbaar"],
+
+"2e":["Een bekende aanval verkleint de te doorzoeken ruimte tot 112 bits",
+      "Bij het genereren van de sleutel gaat 56 bits aan entropie verloren",
+      "De sleutel wordt voor gebruik afgekapt tot de eerste 112 bits",
+      "Van de 168 bits dienen er 56 alleen als pariteitscontrole"],
+
+"2f":["31 bits","32 bits","16 bits","64 bits"],
+
+"2g":["De hoeveelheid echte onvoorspelbaarheid, uitgedrukt in bits",
+      "De hoeveelheid rekenwerk die één versleuteling per blok kost",
+      "De hoeveelheid tekens waaruit een wachtwoord is opgebouwd",
+      "De hoeveelheid opslag die de sleutel in het geheugen kost"],
+
+"2h":["De reeks is reproduceerbaar zodra een aanvaller de seed kent",
+      "De reeks herhaalt zich al na een beperkt aantal waarden",
+      "De reeks bevat uitsluitend waarden binnen een klein bereik",
+      "De reeks is te traag om er lange sleutels mee te vullen"],
+
+"2i":["Het blokkeert tot er genoeg entropie verzameld is",
+      "Het levert bits die zwakker maar nog bruikbaar zijn",
+      "Het vult aan met waarden uit een gewone generator",
+      "Het geeft een foutmelding terug aan het programma"],
+
+/* ---- H3 ---- */
+"3a":["Zender en ontvanger gebruiken dezelfde geheime sleutel",
+      "Zender en ontvanger gebruiken elk hun eigen sleutelpaar",
+      "De sleutel wordt telkens uit het bericht zelf afgeleid",
+      "De sleutel is openbaar, alleen het algoritme is geheim"],
+
+"3b":["Wie het bericht onderschept, onderschept dan ook de sleutel",
+      "De ontvanger kan sleutel en bericht dan niet uit elkaar halen",
+      "De sleutel raakt beschadigd door de encryptie van het kanaal",
+      "Het kanaal kan maar één versleutelde stroom tegelijk aan"],
+
+"3c":["Via een ander kanaal dan waarover het bericht zelf gaat",
+      "Via een kanaal dat buiten het algoritme om versleutelt",
+      "Via hetzelfde kanaal maar ruim voor het bericht zelf",
+      "Via een kanaal dat de provider niet kan registreren"],
+
+"3d":["Bewijzen wie van beide partijen een bericht geschreven heeft",
+      "Nieuwe berichten maken die van de echte partij lijken te komen",
+      "Onderschepte berichten uit het verleden alsnog ontsleutelen",
+      "Ongemerkt meelezen met alle verdere communicatie hierover"],
+
+"3e":["Er is geen sleutel; kennis van het algoritme is genoeg",
+      "Het alfabet van 26 letters geeft veel te weinig entropie",
+      "De sleutel is met 13 posities veel te kort gekozen",
+      "De omzetting is niet omkeerbaar en dus onbruikbaar"],
+
+/* ---- H4 ---- */
+"4a":["Wat met de ene sleutel dichtgaat, gaat alleen met de andere open",
+      "Wat met de ene sleutel dichtgaat, gaat met diezelfde weer open",
+      "Beide sleutels kunnen elk bericht dichtdoen én weer opendoen",
+      "De ene sleutel doet dicht, de andere controleert alleen mee"],
+
+"4b":["De publieke sleutel van Bob","De private sleutel van Bob",
+      "Jouw eigen private sleutel","Jouw eigen publieke sleutel"],
+
+"4c":["Jouw eigen private sleutel","Jouw eigen publieke sleutel",
+      "De publieke sleutel van Bob","De private sleutel van Bob"],
+
+"4d":["Het is ordes van grootte trager dan symmetrisch werken",
+      "Het vereist dat de sleutel out-of-band gedeeld wordt",
+      "Het biedt geen enkele bescherming van de integriteit",
+      "Het levert bij gelijke sleutellengte meer sterkte op"],
+
+"4e":["Een product van twee grote priemgetallen is lastig te ontbinden",
+      "Het omkeren van de gebruikte hashfunctie is praktisch onhaalbaar",
+      "Alle mogelijke sleutels van 2048 bits aflopen duurt veel te lang",
+      "Het vinden van grote priemgetallen kost onhaalbaar veel rekentijd"],
+
+"4f":["Asymmetrisch een sessiesleutel delen, daarna symmetrisch werken",
+      "Symmetrisch een sessiesleutel delen, daarna asymmetrisch werken",
+      "Een bericht zowel ondertekenen als versleutelen met één sleutel",
+      "Twee verschillende symmetrische algoritmen na elkaar toepassen"],
+
+"4g":["Je weet niet of hij van die persoon is of van een aanvaller",
+      "Je weet niet of hij nog binnen de geldigheidsduur ervan valt",
+      "Je weet niet of hij al eerder is ingetrokken door de CA",
+      "Je weet niet of hij sterk genoeg is voor jouw toepassing"],
+
+/* ---- H5 ---- */
+"5a":["Toevallige transmissiefouten opsporen, en verder niets",
+      "Opzettelijke wijzigingen door een aanvaller opsporen",
+      "De herkomst van de verstuurde gegevens vaststellen",
+      "De gegevens onleesbaar maken tijdens de overdracht"],
+
+"5b":["Zet invoer van elke lengte om in uitvoer van vaste lengte",
+      "Zet invoer van elke lengte om in uitvoer van gelijke lengte",
+      "Zet invoer van vaste lengte om in uitvoer van elke lengte",
+      "Zet invoer met een sleutel om in terugdraaibare uitvoer"],
+
+"5c":["Twee verschillende invoeren leveren dezelfde hash op",
+      "Twee gelijke invoeren leveren verschillende hashes op",
+      "Twee invoeren leveren hashes op die maar één bit schelen",
+      "Twee hashfuncties leveren voor één invoer hetzelfde op"],
+
+"5d":["Er zijn meer mogelijke invoeren dan mogelijke uitvoerwaarden",
+      "Er zijn meer mogelijke uitvoerwaarden dan mogelijke invoeren",
+      "Elke hashfunctie bevat onvermijdelijk kleine ontwerpfouten",
+      "De uitvoer wordt na berekening afgekapt tot 256 bits"],
+
+"5e":["Je kunt er geen invoer bij vinden en geen collisie construeren",
+      "Je kunt er geen invoer bij vinden zonder de sleutel te kennen",
+      "Hij is zo traag dat brute force in de praktijk niet loont",
+      "Hij levert altijd een uitvoer van minstens 256 bits op"],
+
+"5f":["Een vooraf berekende tabel van hashes met hun invoer",
+      "Een tabel met certificaten die de CA heeft ingetrokken",
+      "Een tabel met alle sleutels die een algoritme toestaat",
+      "Een tabel met per algoritme de status en het bouwjaar"],
+
+"5g":["Willekeur per gebruiker, zodat gelijke wachtwoorden anders hashen",
+      "Een geheime sleutel, zodat de hash zonder die sleutel nutteloos is",
+      "Extra rekenwerk, zodat elke poging de aanvaller meer tijd kost",
+      "Een vaste toevoeging, zodat elke hash dezelfde lengte krijgt"],
+
+"5h":["De salt hoeft niet geheim te zijn, alleen uniek per gebruiker",
+      "Dat is wel degelijk een probleem; hij hoort versleuteld te staan",
+      "De salt wordt na het hashen toch weer uit de database gewist",
+      "De salt is te kort om er iets zinnigs mee te kunnen doen"],
+
+"5i":["Bij hashen bestaat er geen sleutel die gestolen kan worden",
+      "Bij hashen kun je het wachtwoord aan de gebruiker teruggeven",
+      "Bij hashen hoeft de database zelf niet beveiligd te worden",
+      "Bij hashen is de opgeslagen waarde korter en dus veiliger"],
+
+"5j":["Een gedeelde geheime sleutel, dus ook zekerheid over de afzender",
+      "Een private sleutel van de afzender, dus bewijs tegenover derden",
+      "Een salt per bericht, dus bescherming tegen rainbow tables",
+      "Een tijdstempel, dus zekerheid dat het bericht recent is"],
+
+"5k":["Een standaardmanier om van een hashfunctie een MAC te maken",
+      "Een standaardmanier om een sleutel uit een wachtwoord af te leiden",
+      "Een standaardmanier om van een blokcijfer een hashfunctie te maken",
+      "Een standaardmanier om een hash asymmetrisch te ondertekenen"],
+
+"5m":["Je hasht het document en versleutelt de hash met je private sleutel",
+      "Je hasht het document en versleutelt de hash met je publieke sleutel",
+      "Je hasht het document samen met een sleutel die je met de ander deelt",
+      "Je versleutelt het document met de publieke sleutel van de ontvanger"],
+
+"5n":["Geen enkele; een handtekening dekt alles behalve vertrouwelijkheid",
+      "Een digitale handtekening, mits je een veilige hashfunctie kiest",
+      "Een HMAC, omdat daar zowel een hash als een sleutel in zit",
+      "Versleutelen en daarna ondertekenen met dezelfde sleutel"],
+
+"5o":["De hash is klein, en asymmetrisch versleutelen is traag",
+      "De hash is klein, en symmetrisch versleutelen is traag",
+      "De hash is geheim, en verbergt zo de inhoud van het document",
+      "De hash is uniek, en daarmee onmogelijk om te vervalsen"],
+
+"5p":["Kleine fouten niet alleen opsporen maar ook herstellen",
+      "Ook grote fouten opsporen die een gewone checksum mist",
+      "Opzettelijke wijzigingen door een aanvaller herkennen",
+      "De gegevens tijdens de overdracht meteen comprimeren"],
+
+/* ---- H6 ---- */
+"6a":["Symmetrisch, en op dit moment de aanbevolen standaard",
+      "Asymmetrisch, en op dit moment de aanbevolen standaard",
+      "Symmetrisch, maar inmiddels als verouderd afgeschreven",
+      "Een hashfunctie, en op dit moment nog steeds actueel"],
+
+"6b":["Asymmetrisch; 2048 bits actueel, 512 bits veel te zwak",
+      "Asymmetrisch; 512 bits actueel, 2048 bits onnodig zwaar",
+      "Asymmetrisch; volledig afgeschreven, ongeacht de lengte",
+      "Symmetrisch; 2048 bits actueel, 512 bits veel te zwak"],
+
+"6c":["Een hashfunctie, en op dit moment nog steeds actueel",
+      "Een hashfunctie, maar inmiddels als onveilig afgeschreven",
+      "Een symmetrisch algoritme, en op dit moment nog actueel",
+      "Een asymmetrisch algoritme voor digitale handtekeningen"],
+
+"6d":["Curve25519","Blowfish","SHA-256","RSA-512"],
+
+"6e":["Digitale handtekeningen zetten","Symmetrische sleutels uitwisselen",
+      "Grote hoeveelheden data versleutelen","Wachtwoorden veilig opslaan"],
+
+"6f":["Er zijn praktisch uitvoerbare collisie-aanvallen bekend",
+      "Er zijn praktisch uitvoerbare brute-force-aanvallen bekend",
+      "De uitvoer van 128 bits is te kort om uniek te kunnen zijn",
+      "Het algoritme is nooit officieel gestandaardiseerd geraakt"],
+
+"6g":["De sleutel van 56 bits is te kort voor brute force",
+      "De sleutel van 56 bits levert te veel collisies op",
+      "Het algoritme is nooit publiek beoordeeld geweest",
+      "De blokgrootte van 64 bits maakt het veel te traag"],
+
+"6h":["AES-256 voor data, Curve25519 voor sleutels, SHA-256 voor hashing",
+      "AES-256 voor data, RSA-512 voor sleutels, SHA-256 voor hashing",
+      "AES-256 voor data, Curve25519 voor sleutels, SHA-1 voor hashing",
+      "3DES voor data, Curve25519 voor sleutels, SHA-256 voor hashing"]
+};
+
+/* ---- H7 ---- */
+Object.assign(HARD,{
+
+"7a":["Een publieke sleutel met identiteitsgegevens, ondertekend door een CA",
+      "Een publieke sleutel met identiteitsgegevens, ondertekend door de eigenaar",
+      "Een publieke sleutel met de sessiesleutel, ondertekend door een CA",
+      "Een volledig sleutelpaar met identiteitsgegevens, ondertekend door een CA"],
+
+"7b":["Vaststellen wie de aanvrager is en dat met een handtekening bevestigen",
+      "Vaststellen wie de aanvrager is en daarvoor een sleutelpaar genereren",
+      "Het verkeer tussen browser en server tijdens de sessie versleutelen",
+      "Voor iedere nieuwe verbinding een verse sessiesleutel uitgeven"],
+
+"7c":["Hij volgt de handtekeningen omhoog tot een root die hij al vertrouwt",
+      "Hij vraagt bij de uitgevende CA na of het certificaat nog geldig is",
+      "Hij controleert of de fingerprint bij de opgegeven domeinnaam past",
+      "Hij vergelijkt het certificaat met de kopie van de vorige keer"],
+
+"7d":["Het is self-signed en zit vooraf in de vertrouwde opslag",
+      "Het is self-signed en wordt bij elk bezoek opnieuw opgehaald",
+      "Het is ondertekend door een hogere root en zit in de opslag",
+      "Het is ondertekend door de beheerder van het domein zelf"],
+
+"7e":["Het geheel van CA's, certificaten en procedures eromheen",
+      "Het register waarin alle publieke sleutels bewaard worden",
+      "Het protocol dat webverkeer tussen partijen versleutelt",
+      "Het algoritme waarmee sleutelparen worden aangemaakt"],
+
+"7f":["Bij DV is alleen domeinbezit gecheckt, bij EV ook de organisatie",
+      "Bij DV is alleen de organisatie gecheckt, bij EV ook domeinbezit",
+      "Bij DV is de sleutel korter, bij EV wordt een sterkere gebruikt",
+      "Bij DV geldt het certificaat korter, bij EV meerdere jaren"],
+
+"7g":["Volwaardige versleuteling, maar alleen domeinbezit gecontroleerd",
+      "Volwaardige versleuteling, en ook de organisatie gecontroleerd",
+      "Volwaardige versleuteling, maar niet door browsers vertrouwd",
+      "Zwakkere versleuteling, maar wel domeinbezit gecontroleerd"],
+
+"7h":["Langs een ander kanaal controleren of dit het juiste certificaat is",
+      "Langs een ander kanaal controleren of het certificaat nog geldig is",
+      "De inhoud van het certificaat compact bewaren in de browsercache",
+      "De identiteit van de uitgevende CA aan de gebruiker tonen"],
+
+"7i":["De private sleutel kan gestolen zijn terwijl het certificaat nog loopt",
+      "De publieke sleutel kan verlopen voordat het certificaat zelf verloopt",
+      "De CA kan de geldigheidsduur achteraf niet meer laten verlengen",
+      "De browser kan het gebruikte algoritme tussentijds afkeuren"],
+
+"7j":[".pem duidt het formaat aan, de andere duiden de inhoud aan",
+      ".pem duidt de inhoud aan, de andere duiden het formaat aan",
+      ".pem is steeds de versleutelde variant van de andere drie",
+      ".pem hoort bij de server, de andere drie bij de client"],
+
+"7k":["Een CSR met je publieke sleutel en je gegevens erin",
+      "Een CSR met je private sleutel en je gegevens erin",
+      "Een CSR met je volledige sleutelpaar en je gegevens",
+      "Een kopie van het rootcertificaat van de CA zelf"],
+
+/* ---- H8 ---- */
+"8a":["Beide partijen hebben dezelfde sessiesleutel zonder die te sturen",
+      "Beide partijen hebben dezelfde sessiesleutel, veilig toegestuurd",
+      "Beide partijen hebben elkaars certificaat ondertekend gekregen",
+      "De client heeft de private sleutel van de server gekregen"],
+
+"8b":["Alleen wat nodig is om de sessiesleutel af te leiden",
+      "Niets, want TLS werkt van begin tot eind symmetrisch",
+      "Alleen de gegevens die als gevoelig zijn aangemerkt",
+      "Alle verstuurde data, want TLS werkt asymmetrisch"],
+
+"8c":["Een lijst met algoritmen en versies die hij ondersteunt",
+      "Een lijst met root-CA's die hij op dit moment vertrouwt",
+      "De sessiesleutel, versleuteld met de publieke sleutel",
+      "Zijn eigen certificaat, zodat de server hem herkent"],
+
+"8d":["Een kale sleutel bewijst niet van wie hij afkomstig is",
+      "Een kale sleutel zegt niet welk algoritme gebruikt wordt",
+      "Een kale sleutel is te groot om in één bericht te passen",
+      "Een kale sleutel kan niet asymmetrisch gebruikt worden"],
+
+"8e":["De gebruiker vertrouwt de sleutel eenmalig en SSH onthoudt hem",
+      "De beheerder deelt een eigen root-CA uit en SSH volgt de keten",
+      "De server toont een certificaat van de eigen systeembeheerder",
+      "De server bewijst zich met een wachtwoord dat hij terugstuurt"],
+
+"8f":["Óf de server is opnieuw geïnstalleerd, óf iemand zit ertussen",
+      "Óf het certificaat is verlopen, óf de CA heeft het ingetrokken",
+      "Óf de verbinding is onversleuteld, óf het algoritme is oud",
+      "Óf je wachtwoord is verlopen, óf je account is geblokkeerd"],
+
+"8g":["Aantonen van wie de software komt en dat zij ongewijzigd is",
+      "Aantonen van wie de software komt en wie haar mag draaien",
+      "Voorkomen dat de software gekopieerd of doorverkocht wordt",
+      "Voorkomen dat de broncode door anderen gelezen kan worden"],
+
+"8h":["Omgekeerd: certificaat, dan handtekening, dan manifest, dan bestanden",
+      "Dezelfde volgorde: manifest, dan handtekening, dan het certificaat",
+      "Alleen de handtekening; het manifest wordt verder niet bekeken",
+      "Alleen het manifest; de andere twee bestanden zijn optioneel"],
+
+"8i":["Vastleggen dat er getekend is toen het certificaat nog geldig was",
+      "Vastleggen tot wanneer de ondertekende software gebruikt mag worden",
+      "Vastleggen wanneer de software voor het laatst is aangepast",
+      "Vastleggen dat de gebruikte private sleutel nog vers was"],
+
+"8j":["Bij elke wachtwoordwijziging zou de hele schijf opnieuw moeten",
+      "Bij elke wachtwoordwijziging zou het wachtwoord op schijf staan",
+      "Bij elke keer opstarten zou het wachtwoord opnieuw nodig zijn",
+      "Bij elk bestand zou een eigen sleutel afgeleid moeten worden"],
+
+"8k":["Wel tegen diefstal van het apparaat, niet tegen malware die draait",
+      "Wel tegen malware die draait, niet tegen diefstal van het apparaat",
+      "Tegen geen van beide; het beschermt alleen tegen netwerkaanvallen",
+      "Tegen beide, zolang het gekozen wachtwoord sterk genoeg is"],
+
+/* ---- H9 ---- */
+"9a":["Identificatie is de claim, authenticatie is het bewijs ervan",
+      "Identificatie is het bewijs, authenticatie is de claim ervan",
+      "Identificatie bepaalt wie je bent, authenticatie wat je mag",
+      "Identificatie is de claim, autorisatie is het bewijs ervan"],
+
+"9b":["Wat een geauthenticeerde gebruiker in het systeem mag doen",
+      "Hoe een gebruiker zijn identiteit aan het systeem bewijst",
+      "Wie een gebruiker volgens het systeem uiteindelijk is",
+      "Hoe lang een gebruiker in het systeem ingelogd blijft"],
+
+"9c":["De autorisatie faalt, de authenticatie is juist gelukt",
+      "De authenticatie faalt, de autorisatie is juist gelukt",
+      "De identificatie faalt, de authenticatie is juist gelukt",
+      "De authenticatie faalt, de identificatie is juist gelukt"],
+
+/* ---- H10 ---- */
+"10a":["Iets dat je weet, iets dat je hebt, iets dat je bent",
+       "Iets dat je weet, iets dat je hebt, iets dat je doet",
+       "Iets dat je weet, iets dat je ziet, iets dat je bent",
+       "Iets dat je hebt, iets dat je bent, iets dat je mag"],
+
+"10b":["Eén factor, want beide vallen onder kennis",
+       "Twee factoren, want een pincode is iets dat je hebt",
+       "Twee factoren, want het zijn twee losse stappen",
+       "Geen factor, want een pincode telt niet zelfstandig"],
+
+"10c":["De extra lengte levert meer entropie op dan tekensubstituties",
+       "Losse woorden staan niet in de woordenboeken van aanvallers",
+       "De extra lengte maakt hem moeilijker uit het hoofd te leren",
+       "Kleine letters zonder cijfers vertragen een brute force"],
+
+"10d":["Na elke mislukte poging een oplopende wachttijd opleggen",
+       "Na elke geslaagde poging een extra factor laten invoeren",
+       "Wachtwoorden met een sterkere hashfunctie laten opslaan",
+       "Elke maand een verplichte wachtwoordwijziging afdwingen"],
+
+"10e":["Elders gelekte combinaties massaal op andere sites proberen",
+       "Alle tekencombinaties systematisch op één account proberen",
+       "Veelgebruikte wachtwoorden massaal op één account proberen",
+       "Gelekte hashes vergelijken met een vooraf berekende tabel"],
+
+"10f":["Het geheim gaat nooit over de lijn, afluisteren levert niets op",
+       "Het geheim gaat versleuteld over de lijn en is dus onleesbaar",
+       "Er hoeft aan beide kanten geen sleutel bewaard te worden",
+       "De server hoeft het geheim zelf helemaal niet te kennen"],
+
+"10g":["De server versleutelt willekeurige data met de publieke sleutel",
+       "De client stuurt zijn private sleutel versleuteld naar de server",
+       "De client en server wisselen hun publieke sleutels uit",
+       "De server vergelijkt de hash van beide publieke sleutels"],
+
+"10h":["HOTP werkt met een teller, TOTP met de klok",
+       "HOTP werkt met de klok, TOTP met een teller",
+       "HOTP werkt met een hash, TOTP met encryptie",
+       "HOTP werkt op hardware, TOTP alleen in een app"],
+
+"10i":["De teller van het token kan voorlopen op die van de server",
+       "De klok van het token kan afwijken van die van de server",
+       "De gebruiker kan een oude code van het scherm overtypen",
+       "Het token kan codes uit een vaste lijst hergebruiken"],
+
+"10j":["Het is een apart apparaat, buiten bereik van malware",
+       "Het gebruikt sterkere algoritmen dan een app dat doet",
+       "Het genereert codes die een stuk langer geldig zijn",
+       "Het hoeft geen enkel geheim met de server te delen"],
+
+"10k":["Een gekopieerde vingerafdruk kun je niet vervangen",
+       "Een vingerafdruk werkt alleen op apparaten met sensor",
+       "Een vingerafdruk is niet met andere factoren te combineren",
+       "Een vingerafdruk levert te weinig entropie voor een sleutel"],
+
+"10m":["Eén keer inloggen bij een centrale partij, daarna overal door",
+       "Eén wachtwoord gebruiken dat je bij elke dienst opnieuw intikt",
+       "Eén beheerder die de wachtwoorden van alle diensten bewaart",
+       "Eén factor gebruiken in plaats van twee of meer factoren"],
+
+"10n":["Een identity provider verklaart ondertekend wie de gebruiker is",
+       "Een identity provider bewaart de wachtwoorden van alle diensten",
+       "Een autorisatieserver geeft een token uit voor beperkte toegang",
+       "Een directory geeft op verzoek de gegevens van een gebruiker"],
+
+"10o":["Als centrale directory met gebruikers, groepen en gegevens",
+       "Als centrale dienst die ondertekende inlogverklaringen afgeeft",
+       "Als centraal protocol dat verkeer tussen servers versleutelt",
+       "Als centrale server die eenmalige inlogcodes uitgeeft"],
+
+/* ---- H11 ---- */
+"11a":["Rechten per afzonderlijke gebruiker of groep instellen",
+       "Rechten voor eigenaar, groep en overige gebruikers instellen",
+       "Rechten automatisch laten verlopen na een ingestelde tijd",
+       "Rechten pas toekennen na een tweede authenticatiefactor"],
+
+"11b":["Autorisatie: een app beperkte toegang geven tot je gegevens",
+       "Federatie: één keer inloggen voor meerdere diensten tegelijk",
+       "Authenticatie: vaststellen wie de gebruiker precies is",
+       "Delegatie: je wachtwoord veilig aan een app doorgeven"],
+
+"11c":["Het zegt wat er mag, niet wie erachter zit of hoe die inlogde",
+       "Het is niet ondertekend en dus niet op echtheid te controleren",
+       "Het is te kort geldig om als identiteitsbewijs te dienen",
+       "Het zegt wie erachter zit, maar niet wat die precies mag"],
+
+"11d":["De gebruiker aan wie de gegevens toebehoren",
+       "De app die namens de gebruiker toegang vraagt",
+       "De partij die de tokens uitgeeft en beheert",
+       "De dienst waar de gegevens zijn opgeslagen"],
+
+"11e":["Het eerste vraagt toestemming, het tweede levert de tokens",
+       "Het eerste levert de tokens, het tweede vraagt toestemming",
+       "Het eerste geeft access tokens, het tweede refresh tokens",
+       "Het eerste is voor webapps, het tweede voor mobiele apps"],
+
+"11f":["De code gaat via de browser, het token via een direct kanaal",
+       "Het token gaat via de browser, de code via een direct kanaal",
+       "De code is langer geldig dan het token en dus makkelijker",
+       "De code bevat de identiteit, het token alleen de rechten"],
+
+"11g":["Een nieuw access token halen zonder de gebruiker te storen",
+       "Een verlopen access token opnieuw geldig laten verklaren",
+       "De rechten van een bestaand access token laten uitbreiden",
+       "De sessiesleutel van de verbinding periodiek vervangen"],
+
+"11h":["Een aanvaller die de authorization code onderschept en inruilt",
+       "Een aanvaller die het access token onderschept en hergebruikt",
+       "Een aanvaller die de gebruiker een vals inlogscherm voorschotelt",
+       "Een aanvaller die het client_secret uit de app weet te lezen"],
+
+"11i":["De app stuurt de hash van een geheim mee en toont later het geheim",
+       "De app stuurt een geheim mee en toont later de hash daarvan",
+       "De app versleutelt de code met de publieke sleutel van de server",
+       "De app ondertekent de code met haar eigen private sleutel"],
+
+"11j":["De code staat op het apparaat van de gebruiker en is uitleesbaar",
+       "De code moet bij elke installatie opnieuw gegenereerd worden",
+       "Mobiele apps kunnen geen direct kanaal naar de server opzetten",
+       "Het secret verloopt sneller dan de app hem kan gebruiken"],
+
+"11k":["Beperkte toegang die je kunt intrekken zonder je wachtwoord",
+       "Volledige toegang die je kunt intrekken zonder je wachtwoord",
+       "Beperkte toegang waarvoor de app je wachtwoord versleutelt",
+       "Volledige toegang zolang je wachtwoord ongewijzigd blijft"],
+
+/* ---- H12 ---- */
+"12a":["OWASP","NIST","ENISA","BSI"],
+
+"12b":["Aanbevelingen verouderen; wat veilig heette is nu afgeschreven",
+       "Aanbevelingen verschillen per land en per toezichthouder",
+       "Oudere bronnen gebruiken andere namen voor dezelfde algoritmen",
+       "Nieuwere bronnen zijn doorgaans door meer mensen getoetst"]
+});
+
+/* Toepassen. De bronvolgorde is altijd juist-eerst; de app husselt bij het
+   tonen, dus de positie verraadt niets. */
+CARDS.forEach(c=>{
+  const h=HARD[c.id]; if(h){c.o=h;c.a=0;}
+  const q=HARDQ[c.id]; if(q)c.q=q;
+});
+
+/* ============ HOLDOUT: ALLEEN VOOR DE MOCK ============
+   Deze kaarten verschijnen nooit in de dagelijkse drill. Als de mock uit
+   dezelfde bank put die je elke avond oefent, meet hij je herkenning van
+   die bank en niet je kennis van de stof -- en dan vleit hij precies op
+   het moment dat je een eerlijk cijfer nodig hebt.
+   mo:1 = mock only. Zelfde ontwerpregels: lengtepariteit, echte afleiders. */
+
+CARDS.push(
+
+/* ---- H1 ---- */
+{id:"x1a",ch:1,t:"Beveiligingsdoelen",g:G.I,mo:1,
+ q:"Een aanvaller wijzigt een overboeking van € 50 naar € 5000 zonder de inhoud te kunnen lezen. Welk doel is geschonden?",
+ o:["Integriteit","Vertrouwelijkheid","Onweerlegbaarheid","Beschikbaarheid"],a:0,
+ w:"De inhoud bleef geheim, dus <b>vertrouwelijkheid</b> hield stand. Wat sneuvelde is <b>integriteit</b>: het bericht is onderweg gewijzigd. Onweerlegbaarheid zou pas in het geding zijn als de afzender kon ontkennen dat hij überhaupt iets stuurde."},
+
+{id:"x1b",ch:1,t:"Basisbegrippen",g:G.B,mo:1,
+ q:"Base64 zet binaire data om in leesbare tekens. Wat is dat?",
+ o:["Coderen, want er komt geen geheim aan te pas",
+    "Encrypten, want de data wordt onleesbaar gemaakt",
+    "Hashen, want de uitvoer heeft een vaste vorm",
+    "Ondertekenen, want de herkomst blijft vaststaan"],a:0,
+ w:"<b>Coderen</b> is een afspraak over representatie, geen beveiliging: iedereen die de afspraak kent, draait het terug. Er is geen sleutel, dus er is geen geheim. Dit is de klassieke valkuil — Base64 ziet er onleesbaar uit en wordt daarom aangezien voor encryptie."},
+
+/* ---- H2 ---- */
+{id:"x2a",ch:2,t:"Kerckhoff",g:G.B,mo:1,
+ q:"Een leverancier zegt: 'Ons algoritme is extra veilig omdat wij het niet publiceren.' Wat is er mis?",
+ o:["De veiligheid moet in de sleutel zitten, niet in het geheime ontwerp",
+    "De veiligheid moet in het ontwerp zitten, niet in de gekozen sleutel",
+    "Een ongepubliceerd algoritme is per definitie wiskundig zwakker",
+    "Een ongepubliceerd algoritme kan niet gecertificeerd worden"],a:0,
+ w:"Dat is <b>security by obscurity</b>. Kerckhoff: alles behalve de sleutel mag bekend zijn. Een geheim algoritme is bovendien nooit door buitenstaanders getoetst, dus zwakke plekken blijven onontdekt tot iemand het reverse-engineert — precies wat bij de OV-chipkaart gebeurde."},
+
+{id:"x2b",ch:2,t:"Entropie",g:G.S,mo:1,
+ q:"Een pincode van 4 cijfers geeft 10 000 mogelijkheden. Hoeveel bits entropie is dat ongeveer?",
+ o:["Ongeveer 13 bits","Ongeveer 4 bits","Ongeveer 40 bits","Ongeveer 10 bits"],a:0,
+ w:"2¹³ = 8192 en 2¹⁴ = 16384, dus 10 000 mogelijkheden zit net boven de 13 bits. Let op de denkfout: het aantal <i>cijfers</i> (4) of het grondtal (10) is niet het aantal bits. Ter vergelijking: een sleutel van 128 bits heeft 2¹²⁸ mogelijkheden."},
+
+{id:"x2c",ch:2,t:"Willekeur",g:G.S,mo:1,
+ q:"Een ontwikkelaar genereert sessiesleutels met de systeemtijd als seed. Waarom is dat fout?",
+ o:["De tijd is te raden, dus de aanvaller reconstrueert de sleutel",
+    "De tijd verandert te snel om een stabiele sleutel te leveren",
+    "De tijd levert te weinig cijfers voor een sleutel van 128 bits",
+    "De tijd verschilt per tijdzone en dus per server van de dienst"],a:0,
+ w:"Een aanvaller die weet dat je rond 20:14 inlogde, hoeft maar een klein aantal seeds te proberen. De sleutel lijkt 128 bits lang, maar de <b>entropie</b> is misschien 20 bits. Gebruik een <b>CSPRNG</b> zoals <code>/dev/random</code>, die put uit onvoorspelbare fysieke bronnen."},
+
+{id:"x2d",ch:2,t:"Sleutelsterkte",g:G.S,mo:1,
+ q:"Een sleutel van 256 bits wordt afgeleid uit een wachtwoord met 40 bits entropie. Hoe sterk is die sleutel?",
+ o:["Ongeveer 39 bits","Precies 256 bits","Ongeveer 296 bits","Ongeveer 128 bits"],a:0,
+ w:"De sterkte wordt bepaald door de zwakste schakel: de <b>entropie van de bron</b>, niet de lengte van het resultaat. Met 40 bits entropie ben je gemiddeld na 2³⁹ pogingen binnen. Een lange sleutel afleiden uit een zwak wachtwoord maakt hem niet sterker — alleen langer."},
+
+/* ---- H3 ---- */
+{id:"x3a",ch:3,t:"Sleuteluitwisseling",g:G.S,mo:1,
+ q:"Tien mensen willen elkaar onderling symmetrisch versleuteld schrijven. Hoeveel verschillende sleutels zijn er nodig?",
+ o:["45","10","20","100"],a:0,
+ w:"Elk paar heeft een eigen sleutel: 10 × 9 / 2 = <b>45</b>. Dit is het <b>sleutelbeheerprobleem</b> van symmetrische crypto — het aantal sleutels groeit kwadratisch. Bij asymmetrisch heeft iedereen één sleutelpaar, dus tien paren en klaar."},
+
+{id:"x3b",ch:3,t:"Sleuteluitwisseling",g:G.S,mo:1,
+ q:"Je mailt iemand een versleuteld zip-bestand en stuurt het wachtwoord in een tweede mail na. Wat is er mis?",
+ o:["Beide berichten gaan over hetzelfde kanaal, dus dit is niet out-of-band",
+    "Het wachtwoord raakt bekend doordat het tweemaal verzonden wordt",
+    "Een zip-bestand is technisch ongeschikt voor sterke versleuteling",
+    "Het wachtwoord moet altijd vóór het bestand verstuurd worden"],a:0,
+ w:"<b>Out-of-band</b> gaat over een <i>ander kanaal</i>, niet over een ander moment of een ander bericht. Wie de mailbox meeleest, ziet beide mails. Bel het wachtwoord door, app het, of geef het persoonlijk."},
+
+/* ---- H4 ---- */
+{id:"x4a",ch:4,t:"Sleutelrichting",g:G.V,mo:1,
+ q:"Je wilt dat alleen Bob je bericht kan lezen én dat Bob zeker weet dat het van jou komt. Wat doe je?",
+ o:["Ondertekenen met jouw private sleutel, versleutelen met Bobs publieke",
+    "Ondertekenen met Bobs publieke sleutel, versleutelen met jouw private",
+    "Ondertekenen met jouw publieke sleutel, versleutelen met Bobs private",
+    "Ondertekenen met Bobs private sleutel, versleutelen met jouw publieke"],a:0,
+ w:"Twee doelen, twee handelingen. <b>Vertrouwelijkheid</b>: versleutelen met de <span class=\"pub\">publieke sleutel van de ontvanger</span>, want alleen hij heeft de bijbehorende private. <b>Authenticatie</b>: ondertekenen met je <span class=\"priv\">eigen private sleutel</span>, want alleen jij hebt die. De vuistregel: versleutelen doe je naar de ander toe, ondertekenen doe je vanuit jezelf.",
+ cf:["4b","4c"]},
+
+{id:"x4b",ch:4,t:"Trapdoor",g:G.B,mo:1,
+ q:"Wat maakt een functie geschikt als trapdoor voor asymmetrische crypto?",
+ o:["Eenvoudig in één richting, onhaalbaar terug zonder extra gegeven",
+    "Eenvoudig in beide richtingen, mits je het algoritme kent",
+    "Onhaalbaar in beide richtingen, ook met de juiste sleutel",
+    "Eenvoudig terug te rekenen, maar traag in de voorwaartse richting"],a:0,
+ w:"Een <b>trapdoor</b> is eenrichtingsverkeer met een geheime achterdeur. Vermenigvuldigen van twee priemgetallen kost niets; het product ontbinden is onhaalbaar — tenzij je één van de factoren al kent. Dat 'extra gegeven' is de private sleutel."},
+
+{id:"x4c",ch:4,t:"Hybride model",g:G.S,mo:1,
+ q:"Waarom versleutelt TLS niet gewoon alle data asymmetrisch?",
+ o:["Asymmetrisch is duizenden malen trager dan symmetrisch werken",
+    "Asymmetrisch kan alleen tekst aan en geen binaire gegevens",
+    "Asymmetrisch biedt geen enkele bescherming van de integriteit",
+    "Asymmetrisch vereist dat beide partijen een certificaat hebben"],a:0,
+ w:"Snelheid. Asymmetrische crypto is ongeveer duizend keer trager en levert langere cryptotekst op. Daarom gebruikt het <b>hybride model</b> asymmetrisch alleen om een symmetrische <b>sessiesleutel</b> af te spreken, en gaat de rest van het verkeer symmetrisch."},
+
+/* ---- H5 ---- */
+{id:"x5a",ch:5,t:"Doelen-tabel",g:G.A,mo:1,
+ q:"Twee servers delen een geheime sleutel en hangen aan elk bericht een HMAC. Wat leveren zij daarmee op?",
+ o:["Integriteit en authenticatie, maar geen onweerlegbaarheid",
+    "Integriteit en onweerlegbaarheid, maar geen authenticatie",
+    "Integriteit, authenticatie en ook onweerlegbaarheid",
+    "Alleen integriteit, want er is geen sleutelpaar gebruikt"],a:0,
+ w:"Beide servers hebben <i>dezelfde</i> sleutel, dus beide kunnen elke geldige HMAC maken. Tegenover een derde valt daarom niet te bewijzen wie het bericht opstelde — geen <b>onweerlegbaarheid</b>. Daarvoor heb je een asymmetrische <b>handtekening</b> nodig.",
+ cf:["5j","5n"]},
+
+{id:"x5b",ch:5,t:"Salt",g:G.V,mo:1,
+ q:"In een gelekte database hebben twee gebruikers exact dezelfde wachtwoordhash. Wat weet je?",
+ o:["Er is geen salt gebruikt, en zij hebben hetzelfde wachtwoord",
+    "Er is wel een salt gebruikt, maar die is voor beiden gelijk gekozen",
+    "Zij hebben verschillende wachtwoorden met een toevallige collisie",
+    "De hashfunctie is verouderd en levert te weinig unieke waarden"],a:0,
+ w:"Met een <b>salt per gebruiker</b> krijgen gelijke wachtwoorden verschillende hashes — dat is precies het doel. Gelijke hashes verraden dus dat er geen (of een gedeelde) salt is. Een echte collisie is bij een veilige hashfunctie astronomisch onwaarschijnlijk; ga daar nooit van uit.",
+ cf:["5g","5h"]},
+
+{id:"x5c",ch:5,t:"Collisie",g:G.I,mo:1,
+ q:"Waarom is een collisie-aanval gevaarlijk bij digitale handtekeningen?",
+ o:["Een tweede document met dezelfde hash erft dezelfde handtekening",
+    "De private sleutel is uit de hash van het document af te leiden",
+    "De handtekening wordt door de collisie onleesbaar voor de ontvanger",
+    "De ontvanger kan de hash van het document niet meer berekenen"],a:0,
+ w:"Je ondertekent de <b>hash</b>, niet het document. Kan een aanvaller een tweede document maken met dezelfde hash, dan geldt jouw handtekening ook daarvoor — en dat is bij MD5 in de praktijk gedaan. Vandaar dat MD5 en SHA-1 zijn afgeschreven."},
+
+{id:"x5d",ch:5,t:"Wachtwoordopslag",g:G.V,mo:1,
+ q:"Welke opslagwijze voor wachtwoorden is het meest verantwoord?",
+ o:["Gehasht met een salt en een bewust trage hashfunctie",
+    "Versleuteld met AES-256 en een goed bewaarde sleutel",
+    "Gehasht met SHA-256 zonder salt, maar wel dubbel toegepast",
+    "Gehasht met een salt en een zo snel mogelijke hashfunctie"],a:0,
+ w:"Drie ingrediënten: <b>hashen</b> (geen sleutel die gestolen kan worden), <b>salt</b> (geen rainbow tables, gelijke wachtwoorden hashen verschillend) en <b>traagheid</b> (elke gokpoging van de aanvaller kost tijd). Snelheid is bij wachtwoorden juist een zwakte, niet een voordeel."},
+
+{id:"x5e",ch:5,t:"MAC",g:G.O,mo:1,
+ q:"Waarom is een MAC ongeschikt als bewijs in een geschil tussen twee partijen?",
+ o:["Beide partijen kennen de sleutel, dus beide konden het bericht maken",
+    "Een MAC is te kort om als juridisch bewijsstuk te kunnen dienen",
+    "Een MAC verloopt na verloop van tijd en is daarna niet te toetsen",
+    "Beide partijen kennen de sleutel, dus geen van beide kan verifiëren"],a:0,
+ w:"Dit is de kern van <b>onweerlegbaarheid</b>. Een gedeelde sleutel betekent een gedeelde mogelijkheid: als Alice een geldige MAC kan maken, kan Bob dat ook, dus geen rechter kan uitmaken wie het was. Alleen een <b>private sleutel</b> die niemand anders heeft, levert bewijs.",
+ cf:["5j","1b"]},
+
+{id:"x5f",ch:5,t:"Digitale handtekening",g:G.O,mo:1,
+ q:"Hoe controleert de ontvanger een digitale handtekening?",
+ o:["Handtekening openen met de publieke sleutel en met de eigen hash vergelijken",
+    "Handtekening openen met de private sleutel en met de eigen hash vergelijken",
+    "Document hashen en die hash met de publieke sleutel van de zender versleutelen",
+    "Document hashen en die hash met de gedeelde geheime sleutel vergelijken"],a:0,
+ w:"Twee bewerkingen die op hetzelfde moeten uitkomen: (1) de meegestuurde handtekening ontsleutelen met de <span class=\"pub\">publieke sleutel van de zender</span> — dat levert de hash op die híj berekende; (2) zelf het document hashen. Gelijk? Dan is het document onveranderd én komt het van de houder van de private sleutel.",
+ cf:["5m"]},
+
+{id:"x5g",ch:5,t:"Collisie",g:G.I,mo:1,
+ q:"SHA-256 levert 2²⁵⁶ mogelijke uitvoerwaarden. Wat volgt daaruit over collisies?",
+ o:["Ze bestaan gegarandeerd, maar zijn niet doelgericht te vinden",
+    "Ze bestaan niet, omdat 2²⁵⁶ meer is dan er invoeren bestaan",
+    "Ze bestaan alleen bij invoeren die langer zijn dan 256 bits",
+    "Ze bestaan gegarandeerd en zijn met genoeg rekenkracht te maken"],a:0,
+ w:"Het <b>duiventilprincipe</b>: oneindig veel mogelijke invoeren, eindig veel uitvoerwaarden, dus collisies moeten bestaan. Cryptografisch veilig betekent niet 'geen collisies', maar 'je kunt er geen vinden of construeren'. Bij MD5 lukt dat inmiddels wel, bij SHA-256 niet."},
+
+/* ---- H6 ---- */
+{id:"x6a",ch:6,t:"Algoritmen",g:G.B,mo:1,
+ q:"Wat voor soort algoritme is SHA-1 en wat is de status?",
+ o:["Een hashfunctie, afgeschreven wegens collisie-aanvallen",
+    "Een hashfunctie, nog actueel voor niet-kritische toepassingen",
+    "Een symmetrisch algoritme, afgeschreven wegens korte sleutels",
+    "Een asymmetrisch algoritme, afgeschreven wegens trage werking"],a:0,
+ w:"SHA-1 is een <b>hashfunctie</b> en sinds 2017 (SHAttered) praktisch gebroken: er zijn echte collisies aangetoond. Niet meer gebruiken voor handtekeningen of certificaten. Opvolger: <b>SHA-256</b>."},
+
+{id:"x6b",ch:6,t:"Algoritmen",g:G.B,mo:1,
+ q:"Wat voor soort algoritme is 3DES en wat is de status?",
+ o:["Symmetrisch, legacy: alleen nog in bestaande systemen",
+    "Symmetrisch, actueel: nog steeds de aanbevolen standaard",
+    "Asymmetrisch, legacy: alleen nog in bestaande systemen",
+    "Een hashfunctie, legacy: vervangen door de SHA-familie"],a:0,
+ w:"3DES is <b>symmetrisch</b>: DES driemaal toegepast om de te korte sleutel te compenseren. Het werkt nog, maar is traag en heeft een effectieve sterkte van 112 bits. Status: <b>legacy</b> — niet fout in oude systemen, wel fout in een nieuw ontwerp. Kies AES."},
+
+{id:"x6c",ch:6,t:"Algoritmen",g:G.B,mo:1,
+ q:"Wat voor soort algoritme is RC4 en wat is de status?",
+ o:["Symmetrisch, afgeschreven wegens aantoonbare zwakheden",
+    "Symmetrisch, actueel voor toepassingen die snelheid vragen",
+    "Asymmetrisch, afgeschreven wegens te korte sleutellengtes",
+    "Een hashfunctie, afgeschreven wegens gevonden collisies"],a:0,
+ w:"RC4 is een <b>symmetrische</b> stroomvercijfering, ooit populair in WEP en TLS, inmiddels <b>afgeschreven</b>: de uitvoer is statistisch niet willekeurig genoeg en daardoor aanvalbaar. Snelheid is nooit een reden om een gebroken algoritme te kiezen."},
+
+{id:"x6d",ch:6,t:"Algoritmen",g:G.B,mo:1,
+ q:"Welke rij bevat uitsluitend symmetrische algoritmen?",
+ o:["AES, Blowfish, Twofish","AES, RSA, Twofish",
+    "AES, Blowfish, SHA-256","DSA, Blowfish, Twofish"],a:0,
+ w:"<b>Symmetrisch</b>: DES, 3DES, AES (Rijndael), RC4, Blowfish, Twofish. <b>Asymmetrisch</b>: RSA, DSA, ECDSA, Curve25519. <b>Hash</b>: MD5, SHA-0/1/256. Deze indeling moet je uit je hoofd kennen — de afleiders op het tentamen bestaan uit één verkeerd item in een verder kloppende rij."},
+
+/* ---- H7 ---- */
+{id:"x7a",ch:7,t:"Chain of trust",g:G.A,mo:1,
+ q:"Je browser meldt: 'certificaat ondertekend door een onbekende autoriteit'. Wat is er aan de hand?",
+ o:["De keten eindigt niet bij een root die het systeem al vertrouwt",
+    "Het certificaat is verlopen en daardoor niet meer te controleren",
+    "De publieke sleutel in het certificaat is te kort voor de browser",
+    "De domeinnaam in het certificaat komt niet overeen met de site"],a:0,
+ w:"De <b>chain of trust</b> loopt van het servercertificaat via eventuele tussencertificaten omhoog naar een <b>root</b>. Eindigt die keten bij iets dat niet in de vertrouwde opslag staat — een zelfgemaakte CA, of een ontbrekend tussencertificaat — dan breekt de keten. Verlopen en naamverschil geven elk een ándere melding."},
+
+{id:"x7b",ch:7,t:"Certificaat",g:G.A,mo:1,
+ q:"Een intern systeem gebruikt een self-signed certificaat. Wat betekent dat voor de beveiliging?",
+ o:["Het verkeer is versleuteld, maar de identiteit is door niemand bevestigd",
+    "Het verkeer is onversleuteld, en de identiteit is door niemand bevestigd",
+    "Het verkeer is versleuteld, en de identiteit is door de server bevestigd",
+    "Het verkeer is versleuteld, maar alleen binnen het eigen netwerk geldig"],a:0,
+ w:"Self-signed wil zeggen: ondertekend met de eigen private sleutel, dus de handtekening bewijst niets over wie je voor je hebt. De <b>versleuteling</b> werkt gewoon — maar tegen een man-in-the-middle helpt zij niet, want die kan net zo goed een eigen self-signed certificaat aanbieden."},
+
+{id:"x7c",ch:7,t:"OpenSSL-bestanden",g:G.S,mo:1,
+ q:"Welk bestand mag je onder geen beding met de CA of met anderen delen?",
+ o:["Het .key-bestand met de private sleutel",
+    "Het .csr-bestand met de aanvraaggegevens",
+    "Het .crt-bestand met het certificaat zelf",
+    "Het .pem-bestand met de publieke sleutel"],a:0,
+ w:"De <b>private sleutel</b> (.key) verlaat je server nooit. Een <b>CSR</b> bevat juist alleen je publieke sleutel plus je gegevens en is bedoeld om verstuurd te worden. Het certificaat (.crt) is publiek — dat deelt je server bij elke verbinding met iedereen."},
+
+{id:"x7d",ch:7,t:"Intrekken",g:G.A,mo:1,
+ q:"De private sleutel van een webserver is gelekt. Wat moet er gebeuren?",
+ o:["Certificaat intrekken en een nieuw sleutelpaar met certificaat aanvragen",
+    "Certificaat intrekken en het bestaande sleutelpaar opnieuw laten tekenen",
+    "Wachten tot het certificaat verloopt en dan een nieuw paar aanvragen",
+    "Alleen het wachtwoord op de private sleutel wijzigen bij de server"],a:0,
+ w:"Een gelekte private sleutel maakt het certificaat waardeloos: iedereen met die sleutel kan zich als jouw server voordoen. Beide stappen zijn nodig — <b>intrekken</b> (revoke), zodat browsers het oude certificaat afwijzen, én een <b>nieuw sleutelpaar</b>, want het oude is besmet."},
+
+{id:"x7e",ch:7,t:"Certificaattypen",g:G.A,mo:1,
+ q:"Een bank wil dat bezoekers kunnen zien dat de site echt van de bank is. Welk certificaat past?",
+ o:["EV, want daarbij wordt de organisatie zelf geverifieerd",
+    "DV, want daarbij wordt het domein onweerlegbaar vastgesteld",
+    "EV, want daarbij worden sterkere sleutels voorgeschreven",
+    "DV, want daarbij controleert de CA ook de bedrijfsgegevens"],a:0,
+ w:"<b>DV</b> (Domain Validation) bewijst alleen dat de aanvrager het domein beheert. <b>OV</b> en <b>EV</b> gaan verder: de CA controleert of de organisatie echt bestaat en de aanvrager erbij hoort. De sleutels zijn bij alle drie even sterk — het verschil zit in de <i>controle</i>, niet in de crypto."},
+
+/* ---- H8 ---- */
+{id:"x8a",ch:8,t:"TLS-handshake",g:G.S,mo:1,
+ q:"In welke volgorde verloopt een TLS-handshake?",
+ o:["Client hello, certificaat, sessiesleutel afspreken, versleuteld verder",
+    "Certificaat, client hello, sessiesleutel afspreken, versleuteld verder",
+    "Client hello, sessiesleutel afspreken, certificaat, versleuteld verder",
+    "Client hello, certificaat, versleuteld verder, sessiesleutel afspreken"],a:0,
+ w:"Eerst zegt de client welke algoritmen hij kent (<b>client hello</b>), dan bewijst de server wie hij is met zijn <b>certificaat</b>, dan leiden beide partijen een gedeelde <b>sessiesleutel</b> af, en pas daarna gaat het echte verkeer <b>symmetrisch versleuteld</b>. De volgorde is logisch: je spreekt geen sleutel af met iemand van wie je de identiteit nog niet kent."},
+
+{id:"x8b",ch:8,t:"TLS-handshake",g:G.A,mo:1,
+ q:"Bij een gewone HTTPS-verbinding: wiens identiteit wordt er vastgesteld?",
+ o:["Alleen die van de server, tenzij de client ook een certificaat toont",
+    "Alleen die van de client, via het wachtwoord dat hij later invoert",
+    "Die van beide partijen, want beide sturen altijd een certificaat",
+    "Van geen van beide, want TLS zorgt uitsluitend voor versleuteling"],a:0,
+ w:"Standaard is TLS <b>eenzijdig geauthenticeerd</b>: de server bewijst zich met een certificaat, de client niet. Dat de client zich daarna met een wachtwoord aanmeldt, is een aparte laag bovenop TLS. <b>Wederzijdse TLS</b> (mTLS), waarbij ook de client een certificaat toont, bestaat wel maar is uitzondering."},
+
+{id:"x8c",ch:8,t:"SSH",g:G.A,mo:1,
+ q:"Waarom is de eerste SSH-verbinding met een nieuwe server het kwetsbaarste moment?",
+ o:["Er is nog geen bekende sleutel, dus je kunt niets verifiëren",
+    "Er is nog geen sessiesleutel, dus het verkeer gaat onversleuteld",
+    "Er is nog geen wachtwoord ingesteld, dus iedereen kan inloggen",
+    "Er is nog geen certificaat, dus de CA kan niets bevestigen"],a:0,
+ w:"SSH werkt met <b>trust on first use</b>: bij die eerste verbinding heb je niets om de getoonde sleutel mee te vergelijken, dus een man-in-the-middle zou nu zijn eigen sleutel kunnen aanbieden. Daarna staat de sleutel in <code>known_hosts</code> en valt elke wijziging op. Vandaar dat je de fingerprint idealiter <b>out-of-band</b> controleert."},
+
+{id:"x8d",ch:8,t:"Code signing",g:G.I,mo:1,
+ q:"Een ondertekende jar is na het tekenen aangepast. Wat merkt jarsigner?",
+ o:["De hash van het bestand wijkt af van wat in het manifest staat",
+    "De handtekening is verdwenen en het certificaat ontbreekt geheel",
+    "De private sleutel van de ondertekenaar blijkt niet meer geldig",
+    "Het certificaat is ingetrokken door de uitgevende autoriteit"],a:0,
+ w:"MANIFEST.MF bevat een <b>hash per bestand</b>. Verandert er één byte, dan klopt die hash niet meer. Het .SF-bestand hasht op zijn beurt het manifest, en het .RSA-bestand ondertekent het .SF-bestand — een keten waarin elke schakel de vorige vastlegt. Wijzigen zonder de private sleutel kan dus niet onopgemerkt.",
+ cf:["8h"]},
+
+{id:"x8e",ch:8,t:"Schijfversleuteling",g:G.V,mo:1,
+ q:"Je laptop met versleutelde schijf wordt gestolen terwijl hij ontgrendeld in slaapstand staat. Wat is het risico?",
+ o:["De masterkey staat in het geheugen en is mogelijk uit te lezen",
+    "De schijf is bij slaapstand automatisch volledig ontsleuteld op disk",
+    "Het wachtwoord staat bij slaapstand in leesbare vorm op de schijf",
+    "De versleuteling vervalt zodra het apparaat van stroom is geweest"],a:0,
+ w:"Schijfversleuteling beschermt data <b>at rest</b>. Zodra je bent ingelogd, staat de <b>masterkey</b> ontsleuteld in het werkgeheugen, want anders kon het systeem niets lezen. Een aanvaller met fysieke toegang tot een draaiend of slapend toestel kan die sleutel mogelijk bemachtigen. Volledig afsluiten is veiliger dan slaapstand.",
+ cf:["8k"]},
+
+/* ---- H9 ---- */
+{id:"x9a",ch:9,t:"Identificatie",g:G.A,mo:1,
+ q:"Je typt je gebruikersnaam in, daarna je wachtwoord, en krijgt vervolgens alleen de map 'Financiën' te zien. Welke drie stappen zijn dat?",
+ o:["Identificatie, authenticatie, autorisatie",
+    "Authenticatie, identificatie, autorisatie",
+    "Identificatie, autorisatie, authenticatie",
+    "Authenticatie, autorisatie, identificatie"],a:0,
+ w:"<b>Identificatie</b> = de claim (gebruikersnaam). <b>Authenticatie</b> = het bewijs van die claim (wachtwoord). <b>Autorisatie</b> = wat je daarna mag (welke mappen). De volgorde is altijd dezelfde en de drie zijn nooit inwisselbaar — dat is precies waar meerkeuzevragen op mikken."},
+
+{id:"x9b",ch:9,t:"Autorisatie",g:G.B,mo:1,
+ q:"Een collega logt succesvol in maar krijgt 'toegang geweigerd' op een rapport. Wat is de juiste conclusie?",
+ o:["Authenticatie geslaagd, autorisatie ontoereikend voor dit rapport",
+    "Authenticatie mislukt, dus autorisatie kon niet worden beoordeeld",
+    "Identificatie geslaagd, maar de authenticatie is halverwege afgebroken",
+    "Autorisatie geslaagd, maar de authenticatie geldt niet voor rapporten"],a:0,
+ w:"Inloggen lukte, dus <b>identificatie en authenticatie</b> zijn rond: het systeem weet wie zij is en gelooft het. Wat ontbreekt is een <b>recht</b> op dit specifieke object. De fout zit dus in de rechtentoekenning, niet in haar wachtwoord — en de oplossing is een beheerder, geen wachtwoordreset."},
+
+/* ---- H10 ---- */
+{id:"x10a",ch:10,t:"Factoren",g:G.A,mo:1,
+ q:"Je logt op je telefoon in met een wachtwoord en ontvangt de bevestigingscode via sms op diezelfde telefoon. Wat is het bezwaar?",
+ o:["De factoren zijn niet onafhankelijk: één apparaat levert beide",
+    "De factoren komen uit dezelfde klasse, namelijk iets dat je weet",
+    "Sms is geen erkende factor omdat het geen wachtwoord bevat",
+    "De factoren zijn onafhankelijk, maar de code is te kort gekozen"],a:0,
+ w:"Het zijn wel degelijk <i>twee klassen</i> — iets dat je weet plus iets dat je hebt. Het probleem is <b>onafhankelijkheid</b>: wie de telefoon in handen heeft of overneemt, heeft beide factoren tegelijk. Echte 2FA vereist dat het compromitteren van de ene factor de andere niet meelevert.",
+ cf:["10b"]},
+
+{id:"x10b",ch:10,t:"OTP",g:G.A,mo:1,
+ q:"Een TOTP-code wordt geweigerd terwijl de gebruiker hem correct overtypt. Wat is de waarschijnlijkste oorzaak?",
+ o:["De klok van het toestel loopt uit de pas met die van de server",
+    "De teller van het toestel loopt voor op die van de server",
+    "De gedeelde geheime sleutel is na verloop van tijd verlopen",
+    "Het toestel heeft geen internetverbinding om de code op te halen"],a:0,
+ w:"<b>TOTP</b> = Time-based: beide kanten berekenen de code uit de gedeelde sleutel én de huidige tijd, meestal in blokken van 30 seconden. Loopt de klok van het toestel te ver uit de pas, dan berekent het een code voor een ander tijdvak. Een teller die voorloopt is het <b>HOTP</b>-probleem. En een authenticator-app heeft juist géén internet nodig.",
+ cf:["10h","10i"]},
+
+{id:"x10c",ch:10,t:"Challenge-response",g:G.A,mo:1,
+ q:"Wat maakt een challenge bij challenge-response bruikbaar?",
+ o:["Hij is elke keer anders, zodat een oud antwoord niets oplevert",
+    "Hij is elke keer hetzelfde, zodat het antwoord te vergelijken valt",
+    "Hij is versleuteld, zodat een afluisteraar hem niet kan lezen",
+    "Hij is ondertekend, zodat de client de server kan controleren"],a:0,
+ w:"De challenge moet <b>uniek en onvoorspelbaar</b> zijn. Zou hij steeds gelijk zijn, dan kan een afluisteraar het antwoord opvangen en later opnieuw afspelen — een <b>replay-aanval</b>. Doordat het antwoord telkens bij een nieuwe challenge hoort, is afluisteren zinloos, en het geheim zelf gaat nooit over de lijn."},
+
+{id:"x10d",ch:10,t:"SSO",g:G.A,mo:1,
+ q:"Wat is het grootste bezwaar tegen single sign-on?",
+ o:["Eén gecompromitteerd account geeft toegang tot alle diensten",
+    "Elke dienst moet het wachtwoord van de gebruiker apart opslaan",
+    "De gebruiker moet bij elke dienst opnieuw twee factoren invoeren",
+    "De centrale partij kan de inhoud van alle diensten meelezen"],a:0,
+ w:"SSO ruilt gemak in tegen concentratie van risico: de centrale inlog wordt een <i>single point of failure</i>. Daarom hoort juist dáár de sterkste beveiliging te zitten — meerfactor, monitoring, korte sessies. Het voordeel blijft dat de losse diensten je wachtwoord nooit te zien krijgen."},
+
+{id:"x10e",ch:10,t:"SAML",g:G.A,mo:1,
+ q:"Bij SAML: wie geeft de ondertekende verklaring af en wie vertrouwt erop?",
+ o:["De identity provider geeft af, de service provider vertrouwt erop",
+    "De service provider geeft af, de identity provider vertrouwt erop",
+    "De gebruiker geeft af, en beide providers vertrouwen daarop",
+    "De certificaatautoriteit geeft af, de identity provider vertrouwt"],a:0,
+ w:"De <b>identity provider</b> (IdP) kent de gebruiker en stelt zijn identiteit vast; hij ondertekent een <b>assertion</b> met zijn private sleutel. De <b>service provider</b> — de dienst die je wilt gebruiken — controleert die handtekening en laat je binnen zonder je ooit zelf te authenticeren."},
+
+{id:"x10f",ch:10,t:"Wachtwoordsterkte",g:G.A,mo:1,
+ q:"Welk beleid levert in de praktijk de sterkste wachtwoorden op?",
+ o:["Een minimale lengte eisen en gelekte wachtwoorden blokkeren",
+    "Elke maand een verplichte wijziging van het wachtwoord eisen",
+    "Minstens één hoofdletter, cijfer en leesteken verplicht stellen",
+    "Een maximale lengte instellen zodat typefouten worden beperkt"],a:0,
+ w:"<b>Lengte</b> levert meer entropie dan tekensubstituties, en een controle tegen bekende lekken haalt de zwakste keuzes eruit. Gedwongen periodieke wijziging werkt averechts (mensen plakken er een cijfer achter) en complexiteitsregels leveren voorspelbare patronen op — <code>Welkom2024!</code>. Dit is ook het huidige NIST-advies."},
+
+/* ---- H11 ---- */
+{id:"x11a",ch:11,t:"OAuth",g:G.A,mo:1,
+ q:"Een app wil weten wíe je bent, niet alleen wat zij namens jou mag. Wat heeft zij nodig?",
+ o:["OpenID Connect, de identiteitslaag bovenop OAuth 2.0",
+    "OAuth 2.0 met een access token dat ruimere rechten geeft",
+    "OAuth 2.0 met een refresh token in plaats van een access token",
+    "SAML, want OAuth kan niet met identiteiten overweg"],a:0,
+ w:"Dit is de klassieke verwarring: <b>OAuth 2.0 is autorisatie</b>, niet authenticatie. Een access token zegt wat er mag, niet wie erachter zit. <b>OpenID Connect</b> legt daar een identiteitslaag overheen met een <b>id_token</b> dat wél over de gebruiker gaat. SAML doet iets vergelijkbaars, maar is niet 'wat OAuth mist'.",
+ cf:["11b","11c"]},
+
+{id:"x11b",ch:11,t:"PKCE",g:G.S,mo:1,
+ q:"Waarom is PKCE juist bij mobiele apps onmisbaar?",
+ o:["Zij kunnen geen client_secret geheimhouden, dus de code moet extra beschermd",
+    "Zij kunnen geen HTTPS gebruiken, dus de code gaat onversleuteld over",
+    "Zij kunnen geen browser openen, dus de gebruiker geeft anders geen toestemming",
+    "Zij kunnen geen tokens bewaren, dus de code moet herbruikbaar blijven"],a:0,
+ w:"Een <b>client_secret</b> in een app die op het toestel van de gebruiker staat, is uit te lezen — dus die kan de app niet gebruiken om te bewijzen dat zij het is. <b>PKCE</b> vervangt dat vaste geheim door een geheim dat per keer wordt verzonnen: eerst de hash meesturen, bij het inwisselen het origineel tonen. Onderschept iemand de code, dan mist hij dat origineel.",
+ cf:["11h","11i","11j"]},
+
+{id:"x11c",ch:11,t:"OAuth-endpoints",g:G.S,mo:1,
+ q:"Waarom gaat de aanvraag bij het token endpoint niet via de browser van de gebruiker?",
+ o:["Een direct kanaal tussen app en server is niet af te luisteren via de browser",
+    "De browser kan geen POST-verzoeken met tokens in de body versturen",
+    "De gebruiker moet bij het token endpoint opnieuw toestemming geven",
+    "Het token endpoint staat op een ander domein dan de browser toelaat"],a:0,
+ w:"Alles wat via de <b>browser</b> loopt — redirects, adresbalk, geschiedenis, logs van tussenliggende servers — is in principe zichtbaar. Daarom gaat daar alleen de kortlevende, eenmalige <b>authorization code</b> overheen. Het <b>access token</b> zelf haalt de app op via een directe server-naar-server-verbinding.",
+ cf:["11e","11f"]},
+
+{id:"x11d",ch:11,t:"OAuth-tokens",g:G.S,mo:1,
+ q:"Waarom hebben access tokens meestal een korte geldigheidsduur?",
+ o:["Een gestolen token is dan maar korte tijd bruikbaar voor de aanvaller",
+    "Een kort token is korter en belast het netwerk daardoor minder zwaar",
+    "Een kort token hoeft door de server niet te worden ondertekend",
+    "Een kort token kan zonder refresh token worden uitgegeven"],a:0,
+ w:"Een access token is een <b>bearer token</b>: wie hem heeft, mag alles wat erin staat — er wordt niet gecontroleerd of jij het bent. Dat maakt de <b>geldigheidsduur</b> de belangrijkste rem op misbruik. Het <b>refresh token</b> vangt het ongemak op: dat blijft langer geldig maar gaat alleen over het beveiligde directe kanaal.",
+ cf:["11g"]},
+
+{id:"x11e",ch:11,t:"Toegangsrechten",g:G.B,mo:1,
+ q:"Een bestand heeft rechten 640. Wat betekent dat?",
+ o:["Eigenaar lezen en schrijven, groep lezen, overigen niets",
+    "Eigenaar lezen en schrijven, groep niets, overigen lezen",
+    "Eigenaar alle rechten, groep lezen, overigen uitvoeren",
+    "Eigenaar lezen, groep schrijven, overigen lezen en schrijven"],a:0,
+ w:"Elk cijfer is een optelsom: lezen = 4, schrijven = 2, uitvoeren = 1. Dus 6 = 4+2 (lezen en schrijven), 4 = alleen lezen, 0 = niets. De drie posities zijn achtereenvolgens <b>eigenaar, groep, overigen</b>. Wil je fijnmaziger dan deze drie groepen, dan heb je een <b>ACL</b> nodig.",
+ cf:["11a"]},
+
+/* ---- H12 ---- */
+{id:"x12a",ch:12,t:"Bronnen",g:G.B,mo:1,
+ q:"Je vindt een blogpost uit 2011 die SHA-1 aanbeveelt voor handtekeningen. Hoe weeg je dat?",
+ o:["Verouderd advies: SHA-1 is sindsdien praktisch gebroken",
+    "Bruikbaar advies: SHA-1 is nog steeds een veilige hashfunctie",
+    "Onbruikbaar advies: SHA-1 was in 2011 ook al afgeschreven",
+    "Bruikbaar advies, mits de sleutel maar lang genoeg gekozen wordt"],a:0,
+ w:"In 2011 was dit een redelijk advies; in 2017 werd de eerste echte SHA-1-collisie aangetoond. Cryptografisch advies heeft een <b>houdbaarheidsdatum</b>, en dat is precies waarom je bij bronnen op het jaartal let en terugvalt op instanties die hun aanbevelingen bijhouden — NIST, ENISA, OWASP."}
+
+);
+
+/* De dagelijkse oefening put uitsluitend hieruit; de holdout blijft apart.
+   Alles wat voortgang toont -- dekkingstabel, doelen, leeches -- rekent ook
+   met DRILL, anders zou je overzicht vol kaarten staan die je nooit ziet. */
+const DRILL=CARDS.filter(c=>!c.mo);
+
+
+const TERMS = [];
+TERMS.push(
+{ch:1,term:"Platte tekst",def:"Het leesbare, onversleutelde bericht. Encrypten zet platte tekst om in <b>cryptotekst</b>, decrypten weer terug."},
+{ch:1,term:"Sleutel",def:"Het geheim waarmee je encrypt of decrypt. Volgens <b>Kerckhoff</b> moet hier de héle veiligheid in zitten — niet in het algoritme."},
+{ch:1,term:"Coderen",def:"Data omzetten naar een andere vorm zonder geheim: Base64, ASCII, morse. Iedereen kan het terugdraaien, dus het is géén beveiliging."},
+{ch:1,term:"Vertrouwelijkheid",def:"Alleen de bedoelde ontvanger kan het lezen. Krijg je van <b>encryptie</b> — niet van hashen, MAC of ondertekenen."},
+{ch:1,term:"Integriteit",def:"Het bericht is onderweg niet gewijzigd. Krijg je van een <b>hash</b>, en tegen opzet van een <b>MAC</b> of <b>handtekening</b>."},
+{ch:1,term:"Authenticatie",def:"Vaststellen dat de afzender of gebruiker echt is wie hij beweert. Vereist een gedeeld of asymmetrisch geheim."},
+{ch:1,term:"Onweerlegbaarheid",def:"De afzender kan achteraf niet ontkennen dat hij tekende. Alleen bij een <b>digitale handtekening</b>, want alleen hij heeft zijn private sleutel."},
+
+{ch:2,term:"Kerckhoff-principe",def:"Een systeem moet veilig blijven als álles behalve de sleutel bekend is. Daarom worden goede algoritmen openbaar gepubliceerd en getest."},
+{ch:2,term:"Security by obscurity",def:"Veiligheid ophangen aan geheimhouding van het ontwerp. Schijnzekerheid — zie de OV-chipkaart (2008), gekraakt zodra het algoritme uitlekte."},
+{ch:2,term:"Perfecte geheimhouding",def:"Shannon: de cryptotekst verraadt niets over de platte tekst, zelfs niet met oneindige rekenkracht. Vereist een even lange, eenmalig gebruikte sleutel."},
+{ch:2,term:"Sleutellengte",def:"Het aantal bits waaruit de sleutel bestaat. Zegt op zichzelf niets over de veiligheid — vergelijk met <b>sleutelsterkte</b>."},
+{ch:2,term:"Sleutelsterkte",def:"Hoeveel werk een aanvaller er echt aan heeft, in bits. 3DES: 168 lengte, 112 sterkte. Verschilt het, dan is er een zwakte gevonden."},
+{ch:2,term:"Entropie",def:"De hoeveelheid echte onvoorspelbaarheid, in bits. Vier willekeurige woorden uit 2048 = 44 bits. Lengte zonder willekeur telt niet."},
+{ch:2,term:"CSPRNG",def:"Cryptografisch veilige willekeurgenerator, gevoed met echte entropie. Op Linux <code>/dev/random</code> en <code>/dev/urandom</code>. Een gewone rand() is voorspelbaar en dus onbruikbaar."},
+
+{ch:3,term:"Symmetrische encryptie",def:"Eén sleutel voor encrypten én decrypten. Snel en sterk, maar je moet die sleutel wel veilig bij de ander krijgen."},
+{ch:3,term:"Sleuteldistributieprobleem",def:"Hoe krijgt de ontvanger de geheime sleutel zonder dat iemand meekijkt? Opgelost met <b>out-of-band</b> uitwisseling of asymmetrische crypto."},
+{ch:3,term:"Out-of-band",def:"Via een ander kanaal dan het bericht zelf. Een aanvaller zou beide kanalen tegelijk moeten beheersen. Zie ook 2FA via sms."},
+
+{ch:4,term:"Publieke sleutel",def:"De sleutel die je vrij mag verspreiden. Gebruikt om berichten aan jou te <b>versleutelen</b> en om jouw handtekening te <b>controleren</b>."},
+{ch:4,term:"Private sleutel",def:"De sleutel die je nooit afgeeft. Gebruikt om aan jou gerichte berichten te <b>ontsleutelen</b> en om zelf te <b>ondertekenen</b>."},
+{ch:4,term:"Trapdoorfunctie",def:"Eén kant op makkelijk, terug praktisch onmogelijk — tenzij je de geheime ingang kent. Bij RSA: priemgetallen vermenigvuldigen versus het product ontbinden."},
+{ch:4,term:"Hybride model",def:"Asymmetrisch een <b>sessiesleutel</b> uitwisselen, daarna symmetrisch versleutelen. Zo omzeil je dat asymmetrisch ±1000× trager is. Dit is wat TLS doet."},
+
+{ch:5,term:"Hashfunctie",def:"Zet invoer van elke lengte om in een vaste, korte uitvoer. Eenrichtingsverkeer, en er is <b>geen sleutel</b> bij betrokken."},
+{ch:5,term:"Collisie",def:"Twee verschillende invoeren met dezelfde hash. Bestaan altijd (duiventilprincipe); het gaat erom of je er één kunt vínden. Bij MD5 en SHA-1 kan dat."},
+{ch:5,term:"Duiventilprincipe",def:"Oneindig veel invoeren, eindig veel hashes — dus botsingen zijn onvermijdelijk. Verklaart waarom collisievrijheid niet bestaat."},
+{ch:5,term:"Rainbow table",def:"Vooraf berekende tabel van hash naar wachtwoord. Onbruikbaar te maken met een <b>salt</b>, want die moet de aanvaller per gebruiker opnieuw doorrekenen."},
+{ch:5,term:"Salt",def:"Unieke willekeur per gebruiker, toegevoegd vóór het hashen. Hoeft niet geheim te zijn en staat gewoon leesbaar in de database — het werk zit in de uniciteit."},
+{ch:5,term:"MAC",def:"Hash mét gedeelde geheime sleutel. Levert <b>integriteit én authenticatie</b>, maar geen onweerlegbaarheid: beide partijen kunnen hem maken."},
+{ch:5,term:"HMAC",def:"De gestandaardiseerde manier (RFC 2104) om een MAC uit een hashfunctie te bouwen, met dubbele hashing. Zie <code>HMAC-SHA256</code>."},
+{ch:5,term:"Digitale handtekening",def:"De hash van het document, versleuteld met je <b>private sleutel</b>. Levert integriteit, authenticatie én onweerlegbaarheid — maar géén vertrouwelijkheid."},
+
+{ch:6,term:"AES / Rijndael",def:"Symmetrisch blokcijfer, huidige standaard. AES-128 is ruim voldoende — vergelijk met RSA, dat 2048 bits nodig heeft voor vergelijkbare sterkte."},
+{ch:6,term:"MD5",def:"Hashfunctie, <b>afgeschreven</b>: er zijn praktisch uitvoerbare collisie-aanvallen. Als download-checksum nog bruikbaar, voor beveiliging niet."},
+{ch:6,term:"RSA",def:"Asymmetrisch, voor zowel versleutelen als ondertekenen. RSA-2048 is actueel, RSA-512 triviaal te kraken."},
+{ch:6,term:"ECDSA / Curve25519",def:"Asymmetrisch op basis van elliptische krommen. Actueel, en veel kortere sleutels bij dezelfde sterkte. ECDSA is puur voor handtekeningen."},
+
+{ch:7,term:"X.509",def:"Het standaardformaat voor certificaten: publieke sleutel plus identiteit, ondertekend door een CA. Bevat nooit een private sleutel."},
+{ch:7,term:"Certificate Authority",def:"Vertrouwde derde die identiteiten controleert en certificaten ondertekent. Al het vertrouwen hangt op de aanname dat de CA zorgvuldig werkt."},
+{ch:7,term:"Chain of trust",def:"De keten van handtekeningen van servercertificaat via tussenliggende CA's tot een <b>rootcertificaat</b> dat al in je systeem staat."},
+{ch:7,term:"Rootcertificaat",def:"Self-signed, bovenaan de keten. De handtekening bewijst niets; het vertrouwen komt doordat je OS of browser het in de lijst heeft opgenomen."},
+{ch:7,term:"PKI",def:"Het geheel van CA's, certificaten en procedures dat publieke sleutels aan identiteiten koppelt — het probleem waar asymmetrische crypto zelf geen antwoord op heeft."},
+{ch:7,term:"DV / OV / EV",def:"Hoe streng er gecontroleerd is: alleen domeinbezit, ook de organisatie, of uitgebreid. De <b>encryptie is bij alle drie even sterk</b>."},
+{ch:7,term:"CSR",def:"Certificate Signing Request: je publieke sleutel plus gegevens, opgestuurd naar de CA. Je private sleutel gaat nooit mee."},
+
+{ch:8,term:"Sessiesleutel",def:"De symmetrische sleutel die uit de TLS-handshake volgt en waarmee alle verdere data versleuteld wordt. Wordt zelf nooit als zodanig verstuurd."},
+{ch:8,term:"known_hosts",def:"Het bestand waarin SSH serversleutels onthoudt. SSH gebruikt geen CA of PKI: je vertrouwt de sleutel de eerste keer zelf (<i>trust on first use</i>)."},
+{ch:8,term:"Code signing",def:"Software ondertekenen zodat herkomst en ongewijzigdheid vaststaan. Verifiëren gebeurt in <b>omgekeerde volgorde</b> van het ondertekenen."},
+{ch:8,term:"Masterkey",def:"Bij schijfversleuteling: de sleutel waarmee de schijf versleuteld is, die zélf versleuteld wordt met je wachtwoordsleutel. Zo hoef je bij een wachtwoordwijziging niet de hele schijf te herversleutelen."},
+
+{ch:9,term:"Identificatie",def:"Claimen wie je bent (je gebruikersnaam intikken). Nog geen bewijs — dat is <b>authenticatie</b>."},
+{ch:9,term:"Autorisatie",def:"Wat een geauthenticeerde gebruiker mag. Komt ná authenticatie. Volgorde: identificatie → authenticatie → autorisatie."},
+
+{ch:10,term:"Authenticatiefactoren",def:"Iets dat je <b>weet</b>, <b>bezit</b> of <b>bent</b>. Voor echte 2FA moeten ze uit verschillende klassen komen én onafhankelijk zijn."},
+{ch:10,term:"Challenge-response",def:"De server stuurt iets onvoorspelbaars, jij bewijst dat je het geheim kent zonder het te versturen. Beschermt tegen afluisteren en <b>replay</b>."},
+{ch:10,term:"HOTP",def:"OTP op basis van een <b>teller</b> (RFC 4226). De code blijft geldig tot gebruik; server accepteert een klein venster vooruit bij desynchronisatie."},
+{ch:10,term:"TOTP",def:"OTP op basis van de <b>tijd</b> (RFC 6238), meestal per 30 seconden. De <i>T</i> van tijd — verloopt vanzelf. Probleem hier is klokdrift, niet tellerdrift."},
+{ch:10,term:"Single sign-on",def:"Eén keer authenticeren bij een <b>identity provider</b>, daarmee toegang tot meerdere diensten. Handig, maar ook een single point of failure."},
+{ch:10,term:"SAML",def:"XML-formaat waarin een IdP een <b>ondertekende</b> verklaring over je identiteit aan een dienst doorgeeft. Basis van SURFconext, met wayf-scherm."},
+
+{ch:11,term:"ACL",def:"Access Control List: rechten per individuele gebruiker of groep, fijnmaziger dan chmod met alleen eigenaar/groep/rest."},
+{ch:11,term:"OAuth 2.0",def:"<b>Autorisatie</b>protocol: een app krijgt namens jou beperkte, intrekbare toegang zonder je wachtwoord. Géén authenticatie — daarvoor is <b>OpenID Connect</b>."},
+{ch:11,term:"Authorization code",def:"Kortlevende, eenmalige code (max ±10 min) die via de browser-redirect komt. Wordt via een direct kanaal ingewisseld voor een access token."},
+{ch:11,term:"Access token",def:"Sleutel tot de API met een afgebakende <b>scope</b>. Zegt wat er mag, niet wie je bent. Expres kortlevend."},
+{ch:11,term:"Refresh token",def:"Waarmee de app stilletjes een nieuw access token ophaalt. Gevoeliger dan het access token zelf, dus alleen voor vertrouwde back-ends."},
+{ch:11,term:"PKCE",def:"RFC 7636: de app stuurt de SHA-256 van een zelfverzonnen <b>code_verifier</b> mee en bewijst bij het inwisselen dat hij het origineel heeft. Maakt een onderschepte authorization code waardeloos."}
+);
+
+/* ============ 3. VOORTGANG ============ */
+const KEY="sec-oefenapp-v1";
+const LADDER=[0,1,1,2,3,4,6];
+let S=load();
+
+function blank(){return{cards:{},log:[],mocks:[],streak:[],made:todayISO(),theme:null};}
+function load(){try{const raw=localStorage.getItem(KEY);if(!raw)return blank();
+  return Object.assign(blank(),JSON.parse(raw));}catch(e){return blank();}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function cs(id){if(!S.cards[id])S.cards[id]={box:0,due:0,reps:0,hce:0,sure:0,leech:false,last:null};
+  return S.cards[id];}
+
+/* Vier uitkomsten uit (goed?) x (zeker?). Dit onderscheid is de kern:
+   een kennisgat repareer je met herhaling, een misvatting alleen met contrast. */
+function grade(card,correct,sure,ms){
+  const c=cs(card.id); c.reps++;
+  c.last = correct?(sure?"CS":"CG"):(sure?"WS":"WG");
+  const slow = ms>20000;
+  if(correct&&sure){ if(!slow)c.box=Math.min(LADDER.length-1,c.box+1); c.sure++; }
+  else if(correct){ c.sure=0; }                       /* geraden is geen kennis */
+  else if(!sure){ c.box=Math.max(1,c.box-2); c.sure=0; }
+  else { c.box=0; c.hce++; c.sure=0; if(c.hce>=4)c.leech=true; }
+
+  /* Deadline-compressie: het interval mag nooit langer zijn dan de tijd die nodig
+     is om de kaart nog het vereiste aantal keer terug te zien. */
+  const need = c.hce>0?4:3;
+  const maxIv = Math.floor(studyDaysLeft()/need);
+  c.due = dayIndex() + Math.min(LADDER[c.box],Math.max(0,maxIv));
+
+  S.log.push({id:card.id,d:todayISO(),r:c.last,ms:Math.round(ms/100)});
+  if(S.log.length>4000)S.log=S.log.slice(-3000);
+  const t=todayISO(); if(S.streak[S.streak.length-1]!==t)S.streak.push(t);
+  save(); return c;
+}
+
+/* ============ 4. SESSIE ============ */
+function pools(){
+  const di=dayIndex(), mis=[],due=[],fresh=[],seen=[];
+  for(const card of DRILL){
+    const c=S.cards[card.id];
+    if(!c){fresh.push(card);continue;}
+    if(c.leech)continue;
+    if(c.hce>0&&c.due<=di)mis.push(card);
+    else if(c.due<=di)due.push(card);
+    else seen.push(card);
+  }
+  return {mis,due,fresh,seen};
+}
+function pick(arr,n){const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a.slice(0,n);}
+
+/* Nooit twee kaarten van hetzelfde onderwerp of hetzelfde doel achter elkaar --
+   anders wordt het patroonherkenning in plaats van categoriseren. */
+function interleave(list){
+  const out=[],rest=list.slice();
+  while(rest.length){
+    let idx=rest.findIndex(c=>!out.length||
+      (c.t!==out[out.length-1].t&&c.g!==out[out.length-1].g));
+    if(idx<0)idx=0;
+    out.push(rest.splice(idx,1)[0]);
+  }
+  return out;
+}
+function buildSession(size,chapter){
+  let list;
+  if(chapter){ list=pick(DRILL.filter(c=>c.ch===chapter),size); }
+  else{
+    const p=pools();
+    let out=pick(p.mis,Math.round(size*0.40))
+      .concat(pick(p.due,Math.round(size*0.35)))
+      .concat(pick(p.fresh,Math.round(size*0.15)));
+    const used=new Set(out.map(c=>c.id));
+    list=out.concat(pick(p.due.concat(p.fresh,p.seen).filter(c=>!used.has(c.id)),
+      Math.max(0,size-out.length)));
+  }
+  return interleave(list);
+}
+
+/* ============ 5. WEERGAVE ============ */
+const view=document.getElementById("view");
+const rail=document.getElementById("rail");
+let route="vandaag";
+
+const ROUTES=[["vandaag","Vandaag"],["hoofdstuk","Hoofdstukken"],["begrippen","Begrippen"],
+  ["processen","Processen"],["mock","Mock exam"],["voortgang","Voortgang"]];
+const CH_NAMES={1:"Inleiding",2:"Principes",3:"Symmetrisch",4:"Asymmetrisch",
+  5:"Hashing & ondertekenen",6:"Algoritmen",7:"Certificaten",8:"Toepassingen",
+  9:"Authn & authz",10:"Authenticatie",11:"Authorisatie & OAuth",12:"Bronnen"};
+
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+function el(html){const t=document.createElement("template");t.innerHTML=html.trim();
+  return t.content.firstElementChild;}
+function setRail(p){rail.style.width=Math.max(0,Math.min(100,p))+"%";}
+
+function drawNav(){
+  const nav=document.getElementById("nav"); nav.innerHTML="";
+  for(const [id,label] of ROUTES){
+    const b=el('<button type="button">'+label+"</button>");
+    if(id===route)b.setAttribute("aria-current","true");
+    b.onclick=()=>go(id);
+    nav.appendChild(b);
+  }
+}
+function go(r){
+  route=r; drawNav(); setRail(0); window.scrollTo(0,0);
+  ({vandaag:vHome,hoofdstuk:vChapters,begrippen:vTerms,processen:vProcess,
+    mock:vMock,voortgang:vProgress}[r]||vHome)();
+}
+
+/* ---- Vandaag ---- */
+function vHome(){
+  const p=pools();
+  const st=DRILL.map(c=>S.cards[c.id]).filter(Boolean);
+  const done=st.filter(c=>c.box>=4).length;
+  const started=st.length;
+  const mis=st.filter(c=>c.hce>0&&!c.leech).length;
+  const todayCount=S.log.filter(l=>l.d===todayISO()).length;
+
+  view.innerHTML="";
+  view.appendChild(el("<div><h1>"+(isTaperDay()?"Laatste ronde":"Wat sta je vandaag te doen")+"</h1>"+
+    '<p class="lede">'+(isTaperDay()
+      ? "Vandaag maximaal tien kaarten. Meer stampen levert niets meer op — slaap wel."
+      : "Nog <b class=\"num\">"+daysLeftCalendar()+"</b> dagen. De motor kiest zelf welke kaarten terug moeten komen; jij hoeft alleen te starten.")+
+    "</p></div>"));
+
+  view.appendChild(el('<div class="grid">'+
+    '<div class="stat"><div class="k">Beheerst</div><div class="v">'+done+" <small>/ "+DRILL.length+"</small></div></div>"+
+    '<div class="stat"><div class="k">Misvattingen</div><div class="v">'+mis+"</div></div>"+
+    '<div class="stat"><div class="k">Vandaag gedaan</div><div class="v">'+todayCount+"</div></div>"+
+    '<div class="stat"><div class="k">Nooit gezien</div><div class="v">'+(DRILL.length-started)+"</div></div>"+
+    "</div>"));
+
+  const sizes=isTaperDay()?[["Afronden",10]]
+    :[["Kort · 15 min",12],["Avond · 45 min",30],["Blok · 90 min",55]];
+  const box=el('<div class="card" style="margin-top:22px"><h2 style="margin-top:0">Start een sessie</h2><div class="row" id="sz"></div></div>');
+  sizes.forEach(([label,n],i)=>{
+    const b=el('<button class="btn'+(i?" ghost":"")+'">'+label+"</button>");
+    b.onclick=()=>startSession(buildSession(n,null),"Sessie");
+    box.querySelector("#sz").appendChild(b);
+  });
+  view.appendChild(box);
+
+  if(p.mis.length){
+    const w=el('<div class="card" style="margin-top:12px;border-color:var(--bad)">'+
+      '<h2 style="margin-top:0;color:var(--bad)">Fout maar zeker</h2>'+
+      '<p style="margin:0 0 14px">Je had '+p.mis.length+" kaart"+(p.mis.length===1?"":"en")+
+      " fout terwijl je zeker was. Dat is geen gat in je kennis maar een verkeerd aangeleerd verband — die komen hier met hun tegenhangers ernaast.</p>"+
+      '<button class="btn">Alleen deze doen</button></div>');
+    w.querySelector("button").onclick=()=>startSession(interleave(pick(p.mis,20)),"Misvattingen");
+    view.appendChild(w);
+  }
+
+  const leeches=DRILL.filter(c=>S.cards[c.id]&&S.cards[c.id].leech);
+  if(leeches.length){
+    view.appendChild(el('<div class="card" style="margin-top:12px">'+
+      '<h2 style="margin-top:0">Vastgelopen</h2>'+
+      '<p style="margin:0 0 10px;color:var(--muted);font-size:14px">Vier keer fout-maar-zeker. Herhalen repareert deze niet meer — lees het dictaathoofdstuk terug of neem ze door met iemand.</p>'+
+      '<ul class="list">'+leeches.map(c=>"<li>H"+c.ch+" &middot; "+esc(c.t)+"</li>").join("")+"</ul></div>"));
+  }
+}
+
+/* ---- Sessie ---- */
+let sess=null;
+function startSession(list,label){
+  if(!list.length){go("vandaag");return;}
+  /* Bovengrens op de sessie: misvattingen mogen kaarten toevoegen, maar een
+     sessie van een kwartier mag niet ongemerkt een uur worden. */
+  sess={list,i:0,label,right:0,sure:0,t0:0,answers:[],
+        max:Math.round(list.length*1.5)+3,req:{}};
+  drawCard();
+}
+function shuffledOrder(n){
+  const o=[];for(let i=0;i<n;i++)o.push(i);
+  for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}
+  return o;
+}
+function drawCard(){
+  if(sess.i>=sess.list.length)return endSession();
+  const card=sess.list[sess.i];
+  setRail(sess.i/sess.list.length*100);
+  window.scrollTo(0,0);
+  const order=shuffledOrder(card.o.length);
+
+  view.innerHTML="";
+  const wrap=el("<div></div>");
+  wrap.appendChild(el('<div class="qhead"><span class="tag">H'+card.ch+"</span>"+
+    '<span class="tag">'+esc(card.t)+"</span>"+
+    '<span class="tag goal">'+esc(card.g)+"</span>"+
+    '<span class="spacer"></span><span class="tag num">'+(sess.i+1)+" / "+sess.list.length+"</span></div>"));
+  wrap.appendChild(el('<p class="qtext">'+card.q+"</p>"));
+
+  const opts=el('<div class="opts"></div>');
+  const btns=[]; let chosen=-1;
+  order.forEach((oi,n)=>{
+    const b=el('<button class="opt" type="button" aria-pressed="false"><span class="ltr">'+
+      "ABCD"[n]+'</span><span>'+card.o[oi]+"</span></button>");
+    b.dataset.oi=oi;
+    b.onclick=()=>{
+      chosen=oi;
+      btns.forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+      confBox.style.display="";
+      confBox.scrollIntoView({behavior:"smooth",block:"nearest"});
+    };
+    btns.push(b); opts.appendChild(b);
+  });
+  wrap.appendChild(opts);
+
+  const confBox=el('<div class="conf" style="display:none"><p>Hoe zeker ben je van dit antwoord?</p>'+
+    '<div class="row"><button class="btn" data-s="1">Zeker weten</button>'+
+    '<button class="btn ghost" data-s="0">Gokje</button></div></div>');
+  confBox.querySelectorAll("button").forEach(b=>{
+    b.onclick=()=>reveal(card,chosen,b.dataset.s==="1",btns,wrap,confBox);
+  });
+  wrap.appendChild(confBox);
+  view.appendChild(wrap);
+  sess.t0=Date.now();
+}
+
+function reveal(card,chosen,sure,btns,wrap,confBox){
+  const ms=Date.now()-sess.t0;
+  const correct=chosen===card.a;
+  grade(card,correct,sure,ms);
+  sess.answers.push({id:card.id,correct,sure});
+  if(correct)sess.right++;
+  if(correct&&sure)sess.sure++;
+
+  btns.forEach(b=>{
+    const oi=+b.dataset.oi; b.disabled=true; b.setAttribute("aria-pressed","false");
+    if(oi===card.a)b.classList.add("right");
+    else if(oi===chosen)b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  confBox.remove();
+
+  const slow=ms>20000;
+  const head = (correct&&sure)?["ok","Goed — en je wist het"]
+    : correct?["ok","Goed, maar je gokte"]
+    : sure?["bad","Fout — en je was zeker"]
+    : ["bad","Fout, maar je gokte al"];
+
+  const fb=el("<div></div>");
+  fb.appendChild(el('<div class="verdict '+head[0]+'">'+head[1]+"</div>"));
+  fb.appendChild(el('<p class="why">'+card.w+"</p>"));
+
+  if(!correct&&sure)
+    fb.appendChild(el('<p class="note warn">Deze komt zo terug, met de begrippen ernaast waar je hem mee verwart.</p>'));
+  else if(correct&&!sure)
+    fb.appendChild(el('<p class="note">Goed geraden telt niet als kennis — je ziet hem net zo vaak terug.</p>'));
+  else if(correct&&sure&&slow)
+    fb.appendChild(el('<p class="note">Je had er lang voor nodig, dus nog geen promotie.</p>'));
+
+  const next=el('<div class="row" style="margin-top:20px"><button class="btn">Volgende</button></div>');
+  next.querySelector("button").onclick=()=>{
+    if(!correct&&sure&&sess.list.length<sess.max&&!sess.req[card.id]){
+      sess.req[card.id]=1;
+      sess.list.splice(Math.min(sess.list.length,sess.i+8),0,card);
+      /* de verwarbare tegenhangers erbij, met afstand ertussen: naast elkaar
+         zetten leert patroonherkenning, op afstand leert categoriseren */
+      if(card.cf)card.cf.forEach((cid,k)=>{
+        if(sess.list.length>=sess.max)return;
+        const c2=CARDS.find(c=>c.id===cid);
+        if(c2&&!sess.list.slice(sess.i).some(x=>x.id===cid))
+          sess.list.splice(Math.min(sess.list.length,sess.i+3+k*4),0,c2);
+      });
+    }
+    sess.i++; drawCard();
+  };
+  fb.appendChild(next);
+  wrap.appendChild(fb);
+  fb.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function endSession(){
+  setRail(100);
+  const n=sess.answers.length;
+  const pct=Math.round(sess.right/n*100);
+  const guessedRight=sess.answers.filter(a=>a.correct&&!a.sure).length;
+  const sureWrong=sess.answers.filter(a=>!a.correct&&a.sure).length;
+
+  view.innerHTML="";
+  view.appendChild(el("<div><h1>"+esc(sess.label)+" afgerond</h1>"+
+    '<p class="lede">'+sess.right+" van "+n+" goed.</p>"+
+    '<div class="grid">'+
+      '<div class="stat"><div class="k">Score</div><div class="v">'+pct+"<small>%</small></div></div>"+
+      '<div class="stat"><div class="k">Goed én zeker</div><div class="v">'+sess.sure+"</div></div>"+
+      '<div class="stat"><div class="k">Fout maar zeker</div><div class="v">'+sureWrong+"</div></div>"+
+      '<div class="stat"><div class="k">Goed gegokt</div><div class="v">'+guessedRight+"</div></div>"+
+    "</div></div>"));
+
+  const msg = sureWrong>0
+    ? "Die "+sureWrong+" fout-maar-zekere "+(sureWrong===1?"kaart is":"kaarten zijn")+
+      " je grootste winstpunt. Op een meerkeuzetoets zijn de afleiders precies échte begrippen in het verkeerde vakje — daar verlies je punten, niet op wat je niet weet."
+    : guessedRight>2
+    ? "Veel goed gegokt. Die kennis zit nog niet vast; de motor houdt ze daarom in de roulatie."
+    : "Schone sessie. Zo hoort het eruit te zien.";
+  view.appendChild(el('<p class="why" style="margin-top:18px">'+msg+"</p>"));
+
+  const row=el('<div class="row" style="margin-top:20px"><button class="btn">Nog een sessie</button>'+
+    '<button class="btn ghost">Terug</button></div>');
+  row.children[0].onclick=()=>startSession(buildSession(20,null),"Sessie");
+  row.children[1].onclick=()=>go("vandaag");
+  view.appendChild(row);
+  sess=null;
+}
+
+/* ---- Hoofdstukken ---- */
+function vChapters(){
+  view.innerHTML="";
+  view.appendChild(el("<div><h1>Hoofdstukken</h1>"+
+    '<p class="lede">Het hele dictaat, H1 tot en met H12. De balk laat zien hoeveel van elk hoofdstuk je al beheerst.</p></div>'));
+
+  const holder=el('<div class="card" style="padding:16px"></div>');
+  const tbl=el('<table class="cov"><thead><tr><th>H</th><th>Onderwerp</th><th>Kaarten</th><th>Beheerst</th></tr></thead><tbody></tbody></table>');
+  const body=tbl.querySelector("tbody");
+  for(let ch=1;ch<=12;ch++){
+    const set=DRILL.filter(c=>c.ch===ch);
+    if(!set.length)continue;
+    const st=set.map(c=>S.cards[c.id]);
+    const nNew=st.filter(c=>!c).length;
+    const nMid=st.filter(c=>c&&c.box<4).length;
+    const nGood=st.filter(c=>c&&c.box>=4).length;
+    const tot=set.length;
+    const tr=el("<tr><td>"+ch+"</td><td><b>"+CH_NAMES[ch]+"</b></td>"+
+      '<td class="num">'+tot+"</td>"+
+      '<td><div class="meter"><i class="m2" style="width:'+(nGood/tot*100)+'%"></i>'+
+      '<i class="m1" style="width:'+(nMid/tot*100)+'%"></i>'+
+      '<i class="m0" style="width:'+(nNew/tot*100)+'%"></i></div></td></tr>');
+    tr.style.cursor="pointer";
+    tr.onclick=()=>startSession(buildSession(Math.min(set.length,20),ch),"H"+ch+" · "+CH_NAMES[ch]);
+    body.appendChild(tr);
+  }
+  holder.appendChild(tbl);
+  view.appendChild(holder);
+  view.appendChild(el('<p class="note">Tik op een hoofdstuk om er direct mee te oefenen.</p>'));
+}
+
+/* ---- Begrippen ---- */
+let flashIdx=0,flashSet=[];
+function vTerms(){flashSet=pick(TERMS,TERMS.length);flashIdx=0;drawFlash();}
+function drawFlash(){
+  if(!flashSet.length){view.innerHTML='<div class="empty">Geen begrippen geladen.</div>';return;}
+  const t=flashSet[flashIdx%flashSet.length];
+  setRail((flashIdx%flashSet.length)/flashSet.length*100);
+  view.innerHTML="";
+  view.appendChild(el("<div><h1>Begrippen</h1>"+
+    '<p class="lede">De vetgedrukte begrippen uit het dictaat. Zeg de uitleg hardop vóór je omdraait — dat is het hele punt.</p></div>'));
+  const c=el('<div class="card flash"><span class="tag" style="align-self:center">H'+t.ch+"</span>"+
+    '<div class="term">'+esc(t.term)+'</div><div class="def" id="def" style="display:none">'+t.def+"</div></div>");
+  view.appendChild(c);
+  const row=el('<div class="row" style="margin-top:16px"><button class="btn" style="flex:1">Toon uitleg</button></div>');
+  row.children[0].onclick=()=>{
+    c.querySelector("#def").style.display="";
+    row.innerHTML="";
+    const a=el('<button class="btn ghost" style="flex:1">Wist ik niet</button>');
+    const b=el('<button class="btn" style="flex:1">Wist ik</button>');
+    a.onclick=b.onclick=()=>{flashIdx++;drawFlash();};
+    row.appendChild(a);row.appendChild(b);
+  };
+  view.appendChild(row);
+  view.appendChild(el('<p class="note num">'+((flashIdx%flashSet.length)+1)+" van "+flashSet.length+"</p>"));
+}
+
+/* ---- Processen (gevuld in het animatieblok) ---- */
+const ANIMS=[];
+/* Eén stroomdiagram-renderer voor alle processen: twee partijen, berichten
+   ertussen, en de huidige stap opgelicht. Kleur codeert de sleutel:
+   blauw = publiek, pruim = privé -- nooit rood/groen, want die betekenen
+   in deze app al goed en fout. */
+function flowSVG(L,R,msgs,step){
+  const H=86+msgs.length*40;
+  const xl=88,xr=472;
+  let s='<svg viewBox="0 0 560 '+H+'" width="560" style="max-width:100%;height:auto" role="img">';
+  s+='<text x="'+xl+'" y="22" class="nm" text-anchor="middle">'+L+"</text>";
+  s+='<text x="'+xr+'" y="22" class="nm" text-anchor="middle">'+R+"</text>";
+  s+='<line x1="'+xl+'" y1="34" x2="'+xl+'" y2="'+(H-14)+'" stroke="var(--line)" stroke-width="2"/>';
+  s+='<line x1="'+xr+'" y1="34" x2="'+xr+'" y2="'+(H-14)+'" stroke="var(--line)" stroke-width="2"/>';
+
+  msgs.forEach((m,i)=>{
+    const y=72+i*40;
+    const on=i===step, past=i<step;
+    const col = on ? (m.c||"var(--accent)") : past ? "var(--muted)" : "var(--line)";
+    const op  = on ? 1 : past ? .55 : .3;
+    s+='<g opacity="'+op+'">';
+    if(m.d===0){                                   /* interne stap, geen bericht */
+      const x = m.side==="R" ? xr : xl;
+      s+='<rect x="'+(x-64)+'" y="'+(y-13)+'" width="128" height="26" rx="6" fill="none" stroke="'+col+
+         '" stroke-width="2" stroke-dasharray="4 3"/>';
+      s+='<text x="'+x+'" y="'+(y+4)+'" class="lbl" fill="'+col+'" text-anchor="middle">'+m.t+"</text>";
+    } else {
+      const x1 = m.d>0?xl:xr, x2 = m.d>0?xr:xl;
+      s+='<line x1="'+x1+'" y1="'+y+'" x2="'+x2+'" y2="'+y+'" stroke="'+col+'" stroke-width="2"'+
+         (m.d===2?' stroke-dasharray="6 4"':"")+"/>";
+      const tp = m.d>0?xr:xl, dx = m.d>0?-9:9;
+      s+='<polygon points="'+tp+','+y+' '+(tp+dx)+','+(y-5)+' '+(tp+dx)+','+(y+5)+'" fill="'+col+'"/>';
+      if(m.d===2)
+        s+='<polygon points="'+x1+','+y+' '+(x1-dx)+','+(y-5)+' '+(x1-dx)+','+(y+5)+'" fill="'+col+'"/>';
+      s+='<text x="280" y="'+(y-9)+'" class="lbl" fill="'+col+'" text-anchor="middle">'+m.t+"</text>";
+    }
+    s+="</g>";
+  });
+  return s+"</svg>";
+}
+
+/* Verticale keten voor de chain of trust. */
+function chainSVG(nodes,step){
+  const H=40+nodes.length*76;
+  let s='<svg viewBox="0 0 560 '+H+'" width="560" style="max-width:100%;height:auto" role="img">';
+  nodes.forEach((n,i)=>{
+    const y=24+i*76, on=i===step, past=i<step;
+    const col = on?"var(--accent)":past?"var(--muted)":"var(--line)";
+    s+='<g opacity="'+(on?1:past?.6:.32)+'">';
+    s+='<rect x="130" y="'+y+'" width="300" height="52" rx="8" fill="none" stroke="'+col+'" stroke-width="2"/>';
+    s+='<text x="280" y="'+(y+22)+'" class="nm" fill="'+col+'" text-anchor="middle">'+n.t+"</text>";
+    s+='<text x="280" y="'+(y+40)+'" class="lbl" fill="'+col+'" text-anchor="middle">'+n.s+"</text>";
+    if(i<nodes.length-1){
+      s+='<line x1="280" y1="'+(y+52)+'" x2="280" y2="'+(y+70)+'" stroke="'+col+'" stroke-width="2"/>';
+      s+='<polygon points="280,'+(y+76)+' 275,'+(y+66)+' 285,'+(y+66)+'" fill="'+col+'"/>';
+      s+='<text x="296" y="'+(y+68)+'" class="lbl" fill="'+col+'">ondertekent</text>';
+    }
+    s+="</g>";
+  });
+  return s+"</svg>";
+}
+
+ANIMS.push(
+{ch:8,title:"De TLS-handshake",sub:"Vijf stappen naar één gedeelde sessiesleutel",
+ msgs:[
+  {d:1,t:"cipher suites die ik ondersteun"},
+  {d:-1,t:"gekozen suite + X.509-certificaat",c:"var(--pub)"},
+  {d:0,side:"L",t:"certificaat controleren"},
+  {d:1,t:"willekeur, versleuteld met serversleutel",c:"var(--pub)"},
+  {d:2,t:"sessiesleutel — verder symmetrisch"}],
+ steps:[
+  {h:"De client stuurt zijn lijst met algoritmen",
+   d:"De browser opent met wat hij aankan: een lijst <b>cipher suites</b>. Nog niets geheims, puur onderhandeling over wat ze straks samen gaan gebruiken."},
+  {h:"De server kiest en stuurt zijn certificaat",
+   d:"De server pakt de <b>sterkste suite</b> die ze allebei kennen, en stuurt zijn <b>X.509-certificaat</b> met daarin zijn <span class=\"pub\">publieke sleutel</span>. Zijn private sleutel verlaat de server nooit."},
+  {h:"De client controleert dat certificaat",
+   d:"Via de <b>chain of trust</b>: is het ondertekend door een CA die uiteindelijk uitkomt bij een root die al in het systeem staat? Klopt de domeinnaam? Is het niet verlopen of ingetrokken? Pas als dat allemaal klopt, verschijnt het slotje."},
+  {h:"De client stuurt willekeurige data, versleuteld",
+   d:"De client verzint willekeur en versleutelt die met de <span class=\"pub\">publieke sleutel van de server</span>. Alleen de server kan dat openen, met zijn <span class=\"priv\">private sleutel</span> — dat is meteen het bewijs dat hij echt de eigenaar van het certificaat is."},
+  {h:"Beide leiden dezelfde sessiesleutel af",
+   d:"Uit die gedeelde willekeur berekenen ze allebei dezelfde <b>symmetrische sessiesleutel</b>, die zelf nooit over de lijn ging. Vanaf hier gaat <b>alle</b> data er symmetrisch overheen. Asymmetrische crypto is dus alleen in de handshake gebruikt — dit is het <b>hybride model</b>."}]},
+
+{ch:4,title:"Welke sleutel wanneer",sub:"De richting die je op de toets moet kunnen omdraaien",
+ msgs:[
+  {d:1,t:"versleuteld met Bobs publieke sleutel",c:"var(--pub)"},
+  {d:0,side:"R",t:"opent met eigen private",c:"var(--priv)"},
+  {d:1,t:"handtekening met Alice' private sleutel",c:"var(--priv)"},
+  {d:0,side:"R",t:"checkt met Alice' publieke",c:"var(--pub)"}],
+ steps:[
+  {h:"Geheimhouden: versleutel met de sleutel van de ánder",
+   d:"Alice wil dat alleen Bob het leest, dus versleutelt ze met <span class=\"pub\">Bobs publieke sleutel</span>. Die mag iedereen hebben — dat is juist het punt. Doel: <b>vertrouwelijkheid</b>."},
+  {h:"Alleen Bob kan het openen",
+   d:"Bob ontsleutelt met zijn eigen <span class=\"priv\">private sleutel</span>, die niemand anders heeft. Merk op: dit zegt niets over wie het gestuurd heeft — iedereen kent Bobs publieke sleutel en had dit kunnen sturen."},
+  {h:"Ondertekenen: versleutel met je eigen sleutel",
+   d:"Nu precies andersom. Alice hasht het bericht en versleutelt die hash met haar eigen <span class=\"priv\">private sleutel</span>. Dit maakt niets geheim — de hele wereld kan het lezen. Doel: <b>authenticatie en onweerlegbaarheid</b>."},
+  {h:"Iedereen kan controleren dat het van Alice komt",
+   d:"Bob ontsleutelt de handtekening met <span class=\"pub\">Alice' publieke sleutel</span>, hasht het bericht zelf en vergelijkt. Komt het overeen, dan is het onderweg niet gewijzigd én kan het alleen van Alice komen. Vuistregel: <b>geheimhouden → sleutel van de ander, ondertekenen → je eigen sleutel</b>."}]},
+
+{ch:11,title:"OAuth 2.0 met PKCE",sub:"Acht stappen, en waarom die tussenstap met de code bestaat",
+ msgs:[
+  {d:0,side:"L",t:"verifier + SHA256-challenge"},
+  {d:1,t:"/authorize: client_id + challenge"},
+  {d:0,side:"R",t:"gebruiker geeft toestemming"},
+  {d:-1,t:"redirect met authorization code"},
+  {d:1,t:"/token: code + code_verifier"},
+  {d:0,side:"R",t:"hasht verifier, vergelijkt"},
+  {d:-1,t:"access token (+ refresh token)"},
+  {d:1,t:"API-verzoek met access token"}],
+ steps:[
+  {h:"De app verzint een geheim voor deze ene keer",
+   d:"De app maakt een willekeurige <b>code_verifier</b> en berekent daarvan de SHA-256: de <b>code_challenge</b>. De verifier blijft op het apparaat. Dit is nodig omdat een mobiele app geen vast <code>client_secret</code> kan bewaren — dat is uit te lezen."},
+  {h:"De gebruiker wordt naar het authorization endpoint gestuurd",
+   d:"Naar <code>/oauth2/authorize</code> gaat de <b>gebruiker</b> in zijn browser, met <code>client_id</code>, de gevraagde <b>scope</b> en de <b>code_challenge</b>. De client_id is geen geheim — hij zegt alleen welke app het is."},
+  {h:"Inloggen en toestemming geven",
+   d:"Hier authenticeert de gebruiker zich bij de <b>authorization server</b> en keurt hij de gevraagde rechten goed. Belangrijk: zijn wachtwoord komt nooit bij de app terecht — dat is precies wat OAuth komt oplossen."},
+  {h:"Terug met een authorization code",
+   d:"De redirect brengt een <b>authorization code</b> mee: eenmalig en maximaal zo'n tien minuten geldig. Bewust géén access token, want deze route loopt zichtbaar via de browser — adresbalk, geschiedenis, logs."},
+  {h:"De app wisselt de code in, met de verifier erbij",
+   d:"Naar <code>/oauth2/token</code> praat de <b>app</b> rechtstreeks, buiten de browser om. Hij stuurt de code én de oorspronkelijke <b>code_verifier</b> mee."},
+  {h:"De server controleert de PKCE-koppeling",
+   d:"De authorization server hasht de ontvangen verifier en legt die naast de challenge van stap 2. Wie alleen de code onderschepte, mist de verifier en krijgt dus niets. <b>Hier zit de hele bescherming van PKCE.</b>"},
+  {h:"Het access token komt binnen",
+   d:"De app krijgt een kortlevend <b>access token</b> met de afgesproken scope, vaak met een <b>refresh token</b> om later stilletjes te verlengen. Dat refresh token is gevoeliger dan het access token zelf."},
+  {h:"En dan pas de eigenlijke API-aanroep",
+   d:"Het access token gaat mee naar de web-API. Onthoud: het zegt <b>wat er mag</b>, niet <b>wie je bent</b>. Wil je er inloggen op bouwen, dan heb je het <code>id_token</code> van <b>OpenID Connect</b> nodig — OAuth alleen is geen authenticatie."}]},
+
+{ch:8,title:"Code signing",sub:"Opbouwen in één richting, verifiëren precies andersom",
+ msgs:[
+  {d:0,side:"L",t:"MANIFEST.MF: hash per bestand"},
+  {d:0,side:"L",t:"THEOBALD.SF: hash van manifest"},
+  {d:0,side:"L",t:"THEOBALD.RSA: handtekening",c:"var(--priv)"},
+  {d:1,t:"de ondertekende jar wordt verspreid"},
+  {d:0,side:"R",t:"certificaat via chain of trust",c:"var(--pub)"},
+  {d:0,side:"R",t:"handtekening → manifest → bestanden"}],
+ steps:[
+  {h:"Van elk bestand komt een hash in het manifest",
+   d:"<code>MANIFEST.MF</code> krijgt per bestand in de jar een hash. Verandert er later één byte in een bestand, dan klopt de bijbehorende regel niet meer."},
+  {h:"Het manifest wordt zelf gehasht",
+   d:"<code>THEOBALD.SF</code> bevat hashes ván het manifest. Zo hoeft de handtekening straks maar over één klein bestand te gaan in plaats van over de hele jar."},
+  {h:"Het SF-bestand wordt ondertekend",
+   d:"<code>THEOBALD.RSA</code> bevat de <b>digitale handtekening</b> over het SF-bestand, gezet met de <span class=\"priv\">private sleutel</span> van de uitgever, plus zijn <b>certificaat</b>. Vaak komt er een <b>TSA-tijdstempel</b> bij, zodat de handtekening geldig blijft als het certificaat verloopt."},
+  {h:"De jar gaat de deur uit",
+   d:"Wat er verspreid wordt is gewoon leesbaar: code signing geeft <b>integriteit, authenticatie en onweerlegbaarheid</b>, maar géén <b>vertrouwelijkheid</b>. En het zegt niets over of de software goed is — alleen wie hem gemaakt heeft."},
+  {h:"Verifiëren begint bovenaan, bij het certificaat",
+   d:"<code>jarsigner</code> werkt in <b>omgekeerde volgorde</b>. Eerst: is het certificaat te vertrouwen via de <b>chain of trust</b>? Zo niet, dan heeft de rest geen zin."},
+  {h:"En werkt dan naar de bestanden toe",
+   d:"Dan de handtekening over het SF-bestand, dan de hashes in het manifest, en pas als laatste de bestanden zelf. Ondertekenen bouwt <b>op</b>, verifiëren breekt <b>af</b> — die omkering is een klassieke toetsvraag."}]},
+
+{ch:7,title:"De chain of trust",sub:"Waarom je browser een certificaat vertrouwt",
+ nodes:[
+  {t:"Rootcertificaat",s:"self-signed · zit al in je OS of browser"},
+  {t:"Tussenliggende CA",s:"ondertekend door de root"},
+  {t:"Certificaat van de website",s:"ondertekend door de tussenliggende CA"},
+  {t:"De publieke sleutel van de server",s:"hoort aantoonbaar bij dit domein"}],
+ steps:[
+  {h:"Bovenaan staat een root die je al vertrouwt",
+   d:"Een <b>rootcertificaat</b> heeft niemand boven zich, dus tekent het zichzelf: <b>self-signed</b>. Die handtekening bewijst dus niets. Het vertrouwen komt ervandaan dat je besturingssysteem of browser het in zijn lijst heeft staan en die lijst beheert."},
+  {h:"De root ondertekent tussenliggende CA's",
+   d:"Roots worden zwaar beveiligd en zelden gebruikt. Het dagelijkse werk doen <b>intermediate CA's</b>, die door de root zijn ondertekend. Raakt er één gecompromitteerd, dan kun je die intrekken zonder de root te vervangen."},
+  {h:"Die ondertekent het certificaat van de site",
+   d:"De CA controleert of jij het domein beheert (<b>DV</b>) of ook wie je organisatie is (<b>OV/EV</b>) en tekent dan jouw <b>X.509-certificaat</b>. Let op: de <b>versleuteling is bij DV, OV en EV even sterk</b> — alleen de controle verschilt."},
+  {h:"Daarmee staat de koppeling sleutel–domein vast",
+   d:"De browser volgt de keten omhoog tot een bekende root. Klopt elke schakel, dan weet hij dat deze <span class=\"pub\">publieke sleutel</span> écht bij dit domein hoort — en dát is wat een <b>man-in-the-middle</b> tegenhoudt. Zonder certificaten zou een kale publieke sleutel niets bewijzen."}]}
+);
+
+ANIMS.forEach(a=>{
+  a.svg = a.nodes ? (st=>chainSVG(a.nodes,st))
+    : (st=>flowSVG(a.title.indexOf("OAuth")>=0?"App / browser":a.title.indexOf("Code")>=0?"Uitgever":a.title.indexOf("sleutel")>=0?"Alice":"Client",
+        a.title.indexOf("OAuth")>=0?"Authorization server":a.title.indexOf("Code")>=0?"Gebruiker":a.title.indexOf("sleutel")>=0?"Bob":"Server",
+        a.msgs,st));
+});
+
+function vProcess(){
+  view.innerHTML="";
+  view.appendChild(el("<div><h1>Processen</h1>"+
+    '<p class="lede">Vijf processen die je op de toets stap voor stap moet kunnen navertellen. Klik ze door — het gaat om de volgorde en om wie wat heeft.</p></div>'));
+  if(!ANIMS.length){view.appendChild(el('<div class="empty">Nog niet geladen.</div>'));return;}
+  const st=el('<div class="stack"></div>');
+  ANIMS.forEach((a,i)=>{
+    const c=el('<div class="card" style="cursor:pointer"><div class="qhead"><span class="tag">H'+a.ch+
+      '</span><span class="tag goal">'+a.steps.length+' stappen</span></div>'+
+      '<div style="font-size:18px;font-weight:600">'+esc(a.title)+"</div>"+
+      '<div style="color:var(--muted);font-size:14px;margin-top:4px">'+esc(a.sub)+"</div></div>");
+    c.onclick=()=>drawAnim(i,0);
+    st.appendChild(c);
+  });
+  view.appendChild(st);
+}
+
+function drawAnim(ai,step){
+  const a=ANIMS[ai];
+  setRail((step+1)/a.steps.length*100);
+  view.innerHTML="";
+  window.scrollTo(0,0);
+  const s=a.steps[step];
+  const wrap=el("<div></div>");
+  wrap.appendChild(el('<div class="qhead"><span class="tag">H'+a.ch+"</span>"+
+    '<span class="tag">'+esc(a.title)+'</span><span class="spacer"></span>'+
+    '<span class="tag num">'+(step+1)+" / "+a.steps.length+"</span></div>"));
+  wrap.appendChild(el('<div class="card scroller">'+a.svg(step)+"</div>"));
+  wrap.appendChild(el('<h2 style="margin-bottom:8px">Stap '+(step+1)+"</h2>"));
+  wrap.appendChild(el('<p class="qtext" style="margin-bottom:12px">'+s.h+"</p>"));
+  wrap.appendChild(el('<p class="why">'+s.d+"</p>"));
+
+  const row=el('<div class="row" style="margin-top:20px"></div>');
+  if(step>0){const b=el('<button class="btn ghost">Terug</button>');
+    b.onclick=()=>drawAnim(ai,step-1);row.appendChild(b);}
+  if(step<a.steps.length-1){const b=el('<button class="btn" style="flex:1">Volgende stap</button>');
+    b.onclick=()=>drawAnim(ai,step+1);row.appendChild(b);}
+  else{const b=el('<button class="btn" style="flex:1">Klaar</button>');
+    b.onclick=()=>go("processen");row.appendChild(b);}
+  wrap.appendChild(row);
+  view.appendChild(wrap);
+}
+
+/* ---- Mock exam ---- */
+let mock=null;
+/* Het echte tentamen telt 60 vragen en de cesuur ligt op 60% goed.
+   Het cijfer is gokgecorrigeerd: bij vier opties levert puur gokken al
+   vijftien goede antwoorden op, en die tellen niet als kennis. De schaal
+   loopt lineair van 1,0 bij de gokscore, via 5,5 op de cesuur, naar 10. */
+const MOCK_N=60;
+const HOLDHALF={}; CARDS.filter(c=>c.mo).forEach((c,i)=>{HOLDHALF[c.id]=i%2;});
+function cesFrac(){return S.ces||0.60;}
+function cesuur(n){return Math.ceil(n*cesFrac());}
+function mockGrade(right,n){
+  const gok=n/4, ces=cesuur(n);
+  if(right<=gok)return 1;
+  if(right<ces)return Math.round((1+4.5*(right-gok)/(ces-gok))*10)/10;
+  return Math.round((5.5+4.5*(right-ces)/(n-ces))*10)/10;
+}
+function mmss(ms){const s=Math.max(0,Math.round(ms/1000));
+  return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
+
+function vMock(){
+  view.innerHTML="";
+  const ces=cesuur(MOCK_N);
+  view.appendChild(el("<div><h1>Mock exam</h1>"+
+    '<p class="lede">Zestig vragen, geen feedback tussendoor, precies zoals Remindo. '+
+    'Geslaagd vanaf <b>'+ces+" van de "+MOCK_N+"</b> goed.</p></div>"));
+
+  const prev=S.mocks.slice(-4).reverse();
+  if(prev.length){
+    const g=el('<div class="grid" style="margin-bottom:8px"></div>');
+    prev.forEach(m=>{
+      const leesbaar=!!m.a;
+      const t=el("<"+(leesbaar?"button":"div")+' class="stat" style="text-align:left;width:100%'+
+        (leesbaar?";border-color:var(--accent)":"")+'"><div class="k">'+
+        m.d.slice(8,10)+"-"+m.d.slice(5,7)+'</div><div class="v">'+m.grade.toFixed(1)+
+        '</div><div class="k" style="margin-top:4px">'+m.right+" / "+m.n+
+        (leesbaar?" \u00b7 nalezen":"")+"</div></"+(leesbaar?"button":"div")+">");
+      if(leesbaar)t.onclick=()=>showPastMock(m);
+      g.appendChild(t);
+    });
+    view.appendChild(g);
+    if(prev.some(m=>m.a))
+      view.appendChild(el('<p class="note" style="margin:0 0 18px">Tik op een uitslag om '+
+        'terug te lezen wat je per vraag invulde.</p>'));
+  }
+
+  const b=el('<div class="card"><h2 style="margin-top:0">Klaar?</h2>'+
+    '<p style="margin:0 0 14px">Doe hem zoals de echte: telefoon weg, dictaat dicht, '+
+    'in één keer uitzitten. De klok loopt mee zodat je je tempo leert kennen.</p>'+
+    '<p class="note" style="margin:0 0 16px">Ongeveer een derde van de vragen komt uit een '+
+    'aparte voorraad die nooit in je dagelijkse oefening zit, en die voorraad wisselt per '+
+    'afname. Zonder dat zou de mock je herkenning meten in plaats van je kennis \u2014 en '+
+    'juist daarom scoor je hier waarschijnlijk nog iets hoger dan op het echte tentamen.</p>'+
+    '<label class="note" style="display:block;margin:0 0 14px">Cesuur '+
+    '<select style="font:inherit;padding:4px 6px;margin-left:6px">'+
+    '<option value="0.55">55% goed</option><option value="0.6">60% goed</option>'+
+    '<option value="0.65">65% goed</option></select></label>'+
+    '<button class="btn">Start mock exam</button></div>');
+  const sel=b.querySelector("select");
+  sel.value=String(cesFrac());
+  sel.onchange=()=>{S.ces=parseFloat(sel.value);save();vMock();};
+  b.querySelector("button").onclick=startMock;
+  view.appendChild(b);
+}
+function startMock(){
+  const n=MOCK_N, half=S.mocks.length%2;
+  /* De holdout is in twee helften gesplitst en de mocks wisselen elkaar af.
+     De helft die niet aan de beurt is blijft in reserve -- die komt pas in
+     beeld als de rest op zou zijn. Zo krijgt elke mock ongeveer evenveel
+     verse vragen, en blijven opeenvolgende uitslagen onderling vergelijkbaar
+     in plaats van dat de eerste alles opmaakt. */
+  const tier=c=>c.mo?(HOLDHALF[c.id]===half?0:2):1;
+  const out=[];
+  for(let ch=1;ch<=12;ch++){
+    const all=CARDS.filter(c=>c.ch===ch);
+    if(!all.length)continue;
+    const want=Math.max(1,Math.round(all.length/CARDS.length*n));
+    const t=[[],[],[]]; all.forEach(c=>t[tier(c)].push(c));
+    let got=[];
+    t.forEach(g=>{if(got.length<want)got=got.concat(pick(g,want-got.length));});
+    out.push(...got);
+  }
+  let list=pick(out,n);
+  if(list.length<n){
+    const used=new Set(list.map(c=>c.id));
+    list=list.concat(pick(CARDS.filter(c=>!used.has(c.id)),n-list.length));
+  }
+  mock={list:interleave(list),i:0,answers:[],t0:Date.now(),tick:null};
+  mock.tick=setInterval(()=>{
+    const k=document.getElementById("mclock");
+    if(!k){clearInterval(mock.tick);return;}
+    k.textContent=mmss(Date.now()-mock.t0);
+  },1000);
+  drawMockCard();
+}
+/* Reconstrueer de antwoorden van een bewaarde mock uit de kaartenbank. */
+function answersOf(m){
+  if(!m.a)return null;
+  return m.a.map(x=>{const c=CARDS.find(y=>y.id===x.i);
+    return c?{card:c,chosen:x.c,correct:x.c===c.a}:null;}).filter(Boolean);
+}
+/* Standaard alleen de fouten -- daar zit het leren -- maar alles is op te
+   vragen, want een goed antwoord dat eigenlijk een gok was telt ook. */
+function mockReview(answers){
+  const box=el("<div></div>"), wrong=answers.filter(a=>!a.correct);
+  box.appendChild(el("<h2>Je antwoorden</h2>"));
+  const tabs=el('<div class="row" style="margin-bottom:14px">'+
+    '<button class="btn ghost" style="flex:1">Alleen fout \u00b7 '+wrong.length+"</button>"+
+    '<button class="btn ghost" style="flex:1">Alles \u00b7 '+answers.length+"</button></div>");
+  const list=el('<div class="stack"></div>');
+  const mark=k=>[...tabs.children].forEach((b,j)=>{b.className="btn"+(j===k?"":" ghost");});
+  const draw=onlyWrong=>{
+    list.innerHTML="";
+    const set=onlyWrong?wrong:answers;
+    if(!set.length){
+      list.appendChild(el('<p class="note">Niets fout. Loop dan de vragen na waar je twijfelde \u2014 '+
+        'een goede gok is nog geen kennis.</p>'));
+      return;
+    }
+    set.forEach(a=>{
+      const c=a.card, nr=answers.indexOf(a)+1, kleur=a.correct?"ok":"bad";
+      const item=el('<div class="card"></div>');
+      item.appendChild(el('<div class="qhead"><span class="tag num">'+nr+"</span>"+
+        '<span class="tag">H'+c.ch+'</span><span class="tag goal">'+esc(c.g)+"</span>"+
+        '<span class="spacer"></span><span class="tag" style="color:var(--'+kleur+
+        ');border-color:var(--'+kleur+')">'+(a.correct?"goed":"fout")+"</span></div>"));
+      item.appendChild(el('<p style="margin:0 0 12px;font-weight:550">'+esc(c.q)+"</p>"));
+      const opts=el('<div class="opts" style="margin-bottom:14px"></div>');
+      c.o.forEach((txt,k)=>{
+        const mijn=k===a.chosen, juist=k===c.a;
+        const cls=juist?"opt right":(mijn?"opt wrong":"opt dim");
+        opts.appendChild(el('<div class="'+cls+'"><span class="ltr">'+
+          (juist?"\u2713":(mijn?"\u2717":"&nbsp;"))+"</span><span>"+esc(txt)+
+          (mijn?' <span class="tag" style="margin-left:6px">jouw antwoord</span>':"")+
+          "</span></div>"));
+      });
+      item.appendChild(opts);
+      item.appendChild(el('<p class="why">'+c.w+"</p>"));
+      list.appendChild(item);
+    });
+  };
+  tabs.children[0].onclick=()=>{draw(true);mark(0);};
+  tabs.children[1].onclick=()=>{draw(false);mark(1);};
+  box.appendChild(tabs); box.appendChild(list);
+  draw(true); mark(0);
+  return box;
+}
+/* Een eerdere mock opnieuw openen vanaf het overzicht. */
+function showPastMock(m){
+  const answers=answersOf(m);
+  if(!answers)return;
+  view.innerHTML=""; setRail(100);
+  view.appendChild(el("<div><h1>Mock van "+m.d.slice(8,10)+"-"+m.d.slice(5,7)+"</h1>"+
+    '<p class="lede">'+m.right+" van de "+m.n+" goed \u2014 cijfer "+m.grade.toFixed(1)+", "+
+    (m.pass?"gehaald":"niet gehaald")+".</p></div>"));
+  view.appendChild(mockReview(answers));
+  const wrong=answers.filter(a=>!a.correct).map(a=>a.card);
+  const row=el('<div class="row" style="margin-top:22px">'+
+    '<button class="btn">Deze fouten oefenen</button>'+
+    '<button class="btn ghost">Terug</button></div>');
+  row.children[0].onclick=()=>startSession(interleave(wrong),"Fouten uit de mock");
+  if(!wrong.length)row.children[0].disabled=true;
+  row.children[1].onclick=()=>go("mock");
+  view.appendChild(row);
+}
+function drawMockCard(){
+  if(mock.i>=mock.list.length)return endMock();
+  const card=mock.list[mock.i];
+  setRail(mock.i/mock.list.length*100);
+  window.scrollTo(0,0);
+  const order=shuffledOrder(card.o.length);
+  view.innerHTML="";
+  const wrap=el("<div></div>");
+  wrap.appendChild(el('<div class="qhead"><span class="tag">Mock</span>'+
+    '<span class="tag num" id="mclock">'+mmss(Date.now()-mock.t0)+'</span>'+
+    '<span class="spacer"></span>'+
+    '<span class="tag num">'+(mock.i+1)+" / "+mock.list.length+"</span></div>"));
+  wrap.appendChild(el('<p class="qtext">'+card.q+"</p>"));
+  const opts=el('<div class="opts"></div>');
+  order.forEach((oi,n)=>{
+    const b=el('<button class="opt" type="button"><span class="ltr">'+"ABCD"[n]+
+      '</span><span>'+card.o[oi]+"</span></button>");
+    b.onclick=()=>{mock.answers.push({card,chosen:oi,correct:oi===card.a});mock.i++;drawMockCard();};
+    opts.appendChild(b);
+  });
+  wrap.appendChild(opts);
+  view.appendChild(wrap);
+}
+function endMock(){
+  setRail(100);
+  if(mock.tick)clearInterval(mock.tick);
+  const right=mock.answers.filter(a=>a.correct).length;
+  const n=mock.answers.length;
+  const secs=Math.round((Date.now()-mock.t0)/1000);
+  const ces=cesuur(n), grade=mockGrade(right,n), pass=right>=ces;
+  /* Bewaar wat zij per vraag aankruiste, niet alleen de score. Alleen het
+     kaart-id en de gekozen index -- de vraag zelf staat al in de bank. */
+  const filled=mock.answers.map(a=>({i:a.card.id,c:a.chosen}));
+  S.mocks.push({d:todayISO(),right,n,grade,pass,secs,a:filled});save();
+
+  view.innerHTML="";
+  view.appendChild(el('<div><h1>Mock afgerond</h1>'+
+    '<p class="lede" style="color:var(--'+(pass?"ok":"bad")+');font-weight:600">'+
+    (pass?"Gehaald":"Niet gehaald")+" \u2014 "+right+" van de "+n+
+    " goed, de cesuur ligt op "+ces+'.</p><div class="grid">'+
+    '<div class="stat"><div class="k">Cijfer</div><div class="v">'+grade.toFixed(1)+"</div></div>"+
+    '<div class="stat"><div class="k">Goed</div><div class="v">'+right+' <small>/ '+n+"</small></div></div>"+
+    '<div class="stat"><div class="k">Tijd</div><div class="v">'+Math.round(secs/60)+
+    ' <small>min</small></div></div>'+
+    '<div class="stat"><div class="k">Per vraag</div><div class="v">'+Math.round(secs/n)+
+    ' <small>sec</small></div></div>'+
+    '</div><p class="note">Het cijfer is gokgecorrigeerd: bij vier opties levert puur gokken al '+
+    Math.round(n/4)+' goede antwoorden op, dus die tellen niet als kennis. '+
+    'De schaal loopt van 1,0 bij '+Math.round(n/4)+' goed, via 5,5 op de cesuur van '+ces+
+    ', naar 10 bij alles goed. Voor een 8 heb je '+
+    Math.ceil(ces+(8-5.5)*(n-ces)/4.5)+' van de '+n+' nodig.</p></div>'));
+
+  const answers=mock.answers, wrong=answers.filter(a=>!a.correct);
+  view.appendChild(mockReview(answers));
+  const row=el('<div class="row" style="margin-top:22px"><button class="btn">Fouten nu oefenen</button>'+
+    '<button class="btn ghost">Terug</button></div>');
+  row.children[0].onclick=()=>startSession(interleave(wrong.map(a=>a.card)),"Fouten uit de mock");
+  row.children[1].onclick=()=>go("vandaag");
+  if(!wrong.length)row.children[0].disabled=true;
+  view.appendChild(row);
+  mock=null;
+}
+
+/* ---- Voortgang ---- */
+function vProgress(){
+  view.innerHTML="";
+  const st=Object.values(S.cards);
+  const good=st.filter(c=>c.box>=4).length;
+  const mis=st.filter(c=>c.hce>0).length;
+  const total=CARDS.length||1;
+  const days=new Set(S.streak).size;
+
+  view.appendChild(el("<div><h1>Voortgang</h1>"+
+    '<p class="lede">Nog <b class="num">'+daysLeftCalendar()+"</b> dagen tot de toets.</p>"+
+    '<div class="grid">'+
+      '<div class="stat"><div class="k">Beheerst</div><div class="v">'+Math.round(good/total*100)+"<small>%</small></div></div>"+
+      '<div class="stat"><div class="k">Kaarten gezien</div><div class="v">'+st.length+" <small>/ "+CARDS.length+"</small></div></div>"+
+      '<div class="stat"><div class="k">Misvattingen</div><div class="v">'+mis+"</div></div>"+
+      '<div class="stat"><div class="k">Dagen geoefend</div><div class="v">'+days+"</div></div>"+
+    "</div></div>"));
+
+  view.appendChild(el("<h2>Per beveiligingsdoel</h2>"));
+  const holder=el('<div class="card" style="padding:16px"></div>');
+  const tbl=el('<table class="cov"><tbody></tbody></table>');
+  Object.values(G).forEach(g=>{
+    const set=DRILL.filter(c=>c.g===g);
+    if(!set.length)return;
+    const s=set.map(c=>S.cards[c.id]);
+    const nGood=s.filter(c=>c&&c.box>=4).length;
+    const nMid=s.filter(c=>c&&c.box<4).length;
+    const nNew=s.filter(c=>!c).length;
+    tbl.querySelector("tbody").appendChild(el('<tr><td colspan="2"><b>'+g+"</b></td>"+
+      '<td class="num">'+set.length+"</td>"+
+      '<td><div class="meter"><i class="m2" style="width:'+(nGood/set.length*100)+'%"></i>'+
+      '<i class="m1" style="width:'+(nMid/set.length*100)+'%"></i>'+
+      '<i class="m0" style="width:'+(nNew/set.length*100)+'%"></i></div></td></tr>'));
+  });
+  holder.appendChild(tbl);
+  view.appendChild(holder);
+
+  view.appendChild(el("<h2>Back-up</h2>"));
+  const bu=el('<div class="card"><p style="margin:0 0 14px">Je voortgang staat in deze browser. Wis je je browsergegevens, dan is hij weg — maak dus af en toe een kopie.</p>'+
+    '<div class="row"><button class="btn ghost" id="exp">Kopieer voortgang</button>'+
+    '<button class="btn ghost" id="imp">Plak voortgang</button>'+
+    '<button class="btn ghost" id="rst" style="color:var(--bad)">Wis alles</button></div>'+
+    '<p class="note" id="msg"></p></div>');
+  bu.querySelector("#exp").onclick=()=>{
+    const txt=JSON.stringify(S);
+    navigator.clipboard.writeText(txt).then(
+      ()=>bu.querySelector("#msg").textContent="Gekopieerd. Plak hem ergens veilig.",
+      ()=>{const ta=document.createElement("textarea");ta.value=txt;ta.style.width="100%";
+        ta.rows=4;bu.appendChild(ta);ta.select();});
+  };
+  bu.querySelector("#imp").onclick=()=>{
+    const v=prompt("Plak hier je gekopieerde voortgang:");
+    if(!v)return;
+    try{S=Object.assign(blank(),JSON.parse(v));save();go("voortgang");}
+    catch(e){bu.querySelector("#msg").textContent="Dat was geen geldige voortgang.";}
+  };
+  bu.querySelector("#rst").onclick=()=>{
+    if(confirm("Alles wissen? Dit kan niet ongedaan worden gemaakt.")){S=blank();save();go("vandaag");}
+  };
+  view.appendChild(bu);
+}
+
+/* ============ 6. START ============ */
+document.getElementById("countdown").textContent=daysLeftCalendar()+" dagen tot de toets";
+const themeBtn=document.getElementById("themeBtn");
+if(S.theme)document.documentElement.setAttribute("data-theme",S.theme);
+themeBtn.onclick=()=>{
+  const cur=document.documentElement.getAttribute("data-theme");
+  const next=cur==="dark"?"light":cur==="light"?"dark"
+    :(matchMedia("(prefers-color-scheme:dark)").matches?"light":"dark");
+  document.documentElement.setAttribute("data-theme",next);
+  S.theme=next;save();
+};
+go("vandaag");
+</script>
